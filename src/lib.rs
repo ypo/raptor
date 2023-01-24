@@ -1,7 +1,8 @@
 //! [![Rust](https://github.com/ypo/raptor/actions/workflows/rust.yml/badge.svg)](https://github.com/ypo/raptor/actions/workflows/rust.yml)
 //! [![codecov](https://codecov.io/gh/ypo/raptor/branch/main/graph/badge.svg?token=P4KE639YU8)](https://codecov.io/gh/ypo/raptor)
+//! [![Crates.io](https://img.shields.io/crates/v/raptor-code)](https://crates.io/crates/raptor-code/)
 //! 
-//! # Raptor
+//! # Raptor Code
 //!
 //! A Rust library for implementing Forward Error Correction (FEC) using Raptor codes.
 //!
@@ -12,7 +13,7 @@
 //!
 //! # Example : Source Block Encoder/Decoder
 //!
-//! Encode and decode a source block using `raptor::encode_source_block` and `raptor::decode_source_block`
+//! Encode and decode a source block using `raptor_code::encode_source_block` and `raptor_code::decode_source_block`
 //!
 //!
 //! ```
@@ -26,7 +27,7 @@
 //!
 //!
 //! // Step 1 - Generate the encoding symbols (source symbols + repair symbols)
-//! let encoding_symbols = raptor::encode_source_block(&source_block, nb_repair);
+//! let encoding_symbols = raptor_code::encode_source_block(&source_block, nb_repair);
 //!
 //! // Step 2 - Re-construct the source data from the encoding symbols
 //!
@@ -40,7 +41,7 @@
 //! // simulate encoding symbol lost
 //! received_symbols[0] = None;
 //!
-//! let reconstructed_data = raptor::decode_source_block(&received_symbols,
+//! let reconstructed_data = raptor_code::decode_source_block(&received_symbols,
 //!                                                       nb_source_symbols,
 //!                                                       source_block_length,
 //!                                                       encoding_symbol_length)
@@ -59,7 +60,7 @@
 //!                                            .map(|source_symbol| source_symbol.to_vec())
 //!                                            .collect();
 //!
-//! let mut encoder = raptor::SourceBlockEncoder::new(&source_block);
+//! let mut encoder = raptor_code::SourceBlockEncoder::new(&source_block);
 //! let n = source_block.len() + 3;
 //!
 //! for esi in 0..n as u32 {
@@ -74,7 +75,7 @@
 //! let encoding_symbol_length = 1024;
 //! let source_block_size = 4; // Number of source symbols in the source block
 //! let mut n = 0u32;
-//! let mut decoder = raptor::SourceBlockDecoder::new(source_block_size);
+//! let mut decoder = raptor_code::SourceBlockDecoder::new(source_block_size);
 //!
 //! while decoder.fully_specified() == false {
 //!     //TODO receive encoding symbol from Network

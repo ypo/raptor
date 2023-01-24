@@ -1,5 +1,5 @@
 [package]
-name = "raptor"
+name = "raptor-code"
 version = "0.1.0"
 edition = "2021"
 authors = ["Yannick Poirier <contact@yannickpoirier.fr>"]
@@ -11,7 +11,7 @@ categories = ["network-programming", "encoding", "aerospace::space-protocols"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "raptor"
+name = "raptor_code"
 path = "src/lib.rs"
 
 [dependencies]

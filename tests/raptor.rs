@@ -30,7 +30,7 @@ mod tests {
     fn encode(data: &[u8], encoding_symbol_size: usize, nb_repair: usize) -> (Vec<Vec<u8>>, usize) {
         let source_block = create_source_block(data, encoding_symbol_size);
         (
-            raptor::encode_source_block(&source_block, nb_repair),
+            raptor_code::encode_source_block(&source_block, nb_repair),
             source_block.len(),
         )
     }
@@ -67,7 +67,7 @@ mod tests {
         // Simulate network transfer
         let received_symbols = network_transfer(&encoding_symbols, network_loss);
 
-        let decoded_source_block = raptor::decode_source_block(
+        let decoded_source_block = raptor_code::decode_source_block(
             &received_symbols,
             nb_source_symbols,
             source_block_length,
