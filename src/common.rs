@@ -48,23 +48,50 @@ fn prime_greater_or_equal(p: u64) -> u64 {
     p
 }
 
+/// 
+/// Calculates the number of ways n objects can be chosen from among r objects without repetition.
 ///
-/// number of ways n objects can be chosen from among r objects without repetition.
+/// # Parameters
+///
+/// * `n`: The total number of objects.
+/// * `r`: The number of objects to be chosen.
 ///
 /// # Returns
-/// n! / (r! * (n - r)!)
+///
+/// An unsigned 64-bit integer representing the number of ways the objects can be chosen without repetition.
+///
+/// The function uses the formula n! / (r! * (n - r)!) to calculate the result.
 fn choose(n: u64, r: u64) -> u64 {
     factorial(n) / (factorial(r) * factorial(n - r))
 }
 
-/// Calculate n!
+/// Calculates the factorial of a given number `n`.
+///
+/// # Parameters
+///
+/// * `n`: The number for which the factorial needs to be calculated.
+///
+/// # Returns
+///
+/// An unsigned 64-bit integer representing the factorial of the given number `n`.
 fn factorial(n: u64) -> u64 {
     (1..=n).product()
 }
 
-// how many bits in x are set.
-// This algorithm basically uses shifts and ANDs to sum up the bits in
-// a tree fashion.
+///
+/// Counts the number of bits that are set in a given unsigned 64-bit integer.
+///
+/// # Parameters
+///
+/// * `x`: The integer to count the set bits of.
+///
+/// # Returns
+///
+/// An unsigned 64-bit integer representing the number of bits that are set in the given integer.
+///
+/// This algorithm uses bit shifts and bitwise ANDs to sum up the set bits in a tree-like fashion.
+/// It first performs bit shifts and ANDs to group the bits into smaller clusters,
+/// and then adds them up to get the final count of set bits.
 fn nb_bits_set(x: u64) -> u64 {
     let mut x = x;
     x -= (x >> 1) & 0x5555555555555555;
@@ -73,11 +100,32 @@ fn nb_bits_set(x: u64) -> u64 {
     (x * 0x0101010101010101) >> 56
 }
 
+/// Checks if a specific bit of an integer is set.
+///
+/// # Parameters
+///
+/// * `x`: The integer to check the bit of.
+/// * `b`: The index of the bit to check.
+///
+/// # Returns
+///
+/// A Boolean indicating if the specified bit of the integer is set (true) or not (false).
+///
 pub fn bit_set(x: u32, b: u32) -> bool {
     return (x >> b) & 1 == 1;
 }
 
-/// Sequence of gray number that have exactly b bits set
+/// Generates a sequence of Gray numbers that have exactly a specified number of bits set.
+///
+/// # Parameters
+///
+/// * `length`: The number of Gray numbers to generate in the sequence.
+/// * `b`: The number of bits that should be set in the generated Gray numbers.
+///
+/// # Returns
+///
+/// A vector of 32-bit unsigned integers representing the generated Gray numbers.
+///
 pub fn gray_sequence(length: usize, b: u32) -> Vec<u32> {
     let mut s = vec![0u32; length];
     let mut i = 0;
@@ -97,13 +145,25 @@ pub fn gray_sequence(length: usize, b: u32) -> Vec<u32> {
     s
 }
 
+/// Random Generator   
+/// RFC 5053 section 5.4.4.1.  
 pub fn rand(x: u32, i: u32, m: u32) -> u32 {
     let v0 = V0[((x + i) % 256) as usize];
     let v1 = V1[(((x / 256) + i) % 256) as usize];
     (v0 ^ v1) % m
 }
 
-/// REF 5.4.4.2. Degree Generator
+/// Degree Generator   
+/// RFC 5053 section 5.4.4.2.
+///
+/// # Parameters
+///
+/// * `v`: The input value for which to generate the degree value.
+///
+/// # Returns
+///
+/// A 32-bit unsigned integer representing the degree value.
+///
 pub fn deg(v: u32) -> u32 {
     static F: [u32; 8] = [0, 10241, 491582, 712794, 831695, 948446, 1032189, 1048576];
     static D: [u32; 8] = [0, 1, 2, 3, 4, 10, 11, 40];
@@ -120,7 +180,7 @@ pub fn deg(v: u32) -> u32 {
     D[D.len() - 1]
 }
 
-/// RFC section 5.4.4.4. Triple Generator
+/// RFC 5053 section 5.4.4.4. Triple Generator
 ///
 /// # Parameters
 ///
@@ -155,6 +215,15 @@ fn triple(k: u32, x: u32, _l: u32, l_prime: u32) -> (u32, u32, u32) {
     (d, a, b)
 }
 
+///
+/// Finds the LT indices
+///
+/// # Parameters
+///
+/// * `k`: The number of source symbols.
+/// * `x`: encoding symbol number (ESI)
+/// * `l`: The number of intermediate symbols desired (K+S+H)
+/// * `l_prime`:  The first prime number >= L
 pub fn find_lt_indices(k: u32, x: u32, l: u32, l_prime: u32) -> Vec<u32> {
     let (mut d, a, mut b) = triple(k, x, l, l_prime);
     if d > l {
@@ -179,6 +248,17 @@ pub fn find_lt_indices(k: u32, x: u32, l: u32, l_prime: u32) -> Vec<u32> {
     indices
 }
 
+///
+/// LT Encode
+///
+/// # Parameters
+///
+/// * `k`: The number of source symbols.
+/// * `x`: encoding symbol number (ESI)
+/// * `l`: The number of intermediate symbols desired (K+S+H)
+/// * `l_prime`:  The first prime number >= L
+/// * `c`: A slice containing the intermediate symbols
+///
 pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8> {
     let indices = find_lt_indices(k, x, l, l_prime);
     let mut block: Vec<u8> = Vec::new();
@@ -188,11 +268,26 @@ pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8>
     block
 }
 
-/// block partitioning function from RFC 5053 S.5.3.1.2
-/// See http://tools.ietf.org/html/rfc5053
-/// Partitions a number i (a size) into j semi-equal pieces. The details are
-/// in the return values: there are jl longer pieces of size il, and js shorter
-/// (il, is, jl, js)
+///
+/// Partitions a number into semi-equal pieces.  
+///
+/// # Parameters
+///
+/// * `i`: The number to be partitioned.
+/// * `j`: The number of pieces the number should be partitioned into.
+///
+/// # Returns
+///
+/// A tuple containing:
+/// * `il` : The size of the longer pieces
+/// * `is` : The size of the shorter pieces
+/// * `jl` : The number of longer pieces
+/// * `js` : The number of shorter pieces
+///
+/// This function follows the block partitioning algorithm specified in RFC 5053 section 5.3.1.2.
+/// It divides the number `i` into `j` semi-equal pieces and returns the sizes of the longer and shorter pieces,
+/// as well as the number of longer and shorter pieces.
+///
 pub fn partition(i: usize, j: usize) -> (usize, usize, usize, usize) {
     let mut il = (i as f64 / j as f64).ceil() as usize;
     let mut is = (i as f64 / j as f64).floor() as usize;
@@ -209,6 +304,17 @@ pub fn partition(i: usize, j: usize) -> (usize, usize, usize, usize) {
     (il, is, jl, js)
 }
 
+/// Performs a bitwise exclusive or (XOR) operation on two slices of bytes.
+///
+/// # Parameters
+///
+/// * `row_1`: The first slice of bytes to be used in the XOR operation.
+/// * `row_2`: The second slice of bytes to be used in the XOR operation.
+///
+/// The function modifies the first slice of bytes in place and does not return any value.
+/// If the length of the second slice of bytes is greater than the first one,
+/// the first slice of bytes is resized to match the length of the second slice.
+/// The function then performs a XOR operation on the corresponding elements of both slices.
 pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
     if row_1.len() < row_2.len() {
         row_1.resize(row_2.len(), 0);
@@ -221,8 +327,20 @@ pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
 }
 
 ///
-/// disjunctive union of row, assuming row coeff are sorted
-///  
+/// Finds the disjunctive union of two sorted slices of integers.
+///
+/// # Parameters
+///
+/// * `row_1`: The first slice of integers.
+/// * `row_2`: The second slice of integers.
+///
+/// # Returns
+///
+/// A vector of integers representing the disjunctive union of the input slices.
+///
+/// The function assumes that the input slices are sorted and finds
+/// the disjunctive union of the two slices by iterating through them and comparing the corresponding elements.
+/// It adds the elements that are not present in both slices and returns the resulting vector of integers.
 pub fn disjunctive_union(row_1: &[u32], row_2: &[u32]) -> Vec<u32> {
     let mut output: Vec<u32> = Vec::new();
 
@@ -252,6 +370,9 @@ pub fn disjunctive_union(row_1: &[u32], row_2: &[u32]) -> Vec<u32> {
 
 #[cfg(test)]
 mod tests {
+
+    // Unit test from gofountain project
+    // https://github.com/google/gofountain
 
     #[test]
     pub fn test_triple() {
