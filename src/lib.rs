@@ -1,4 +1,5 @@
 //! [![Rust](https://github.com/ypo/raptor/actions/workflows/rust.yml/badge.svg)](https://github.com/ypo/raptor/actions/workflows/rust.yml)
+//! [![codecov](https://codecov.io/gh/ypo/raptor/branch/main/graph/badge.svg?token=P4KE639YU8)](https://codecov.io/gh/ypo/raptor)
 //! 
 //! # Raptor
 //!
