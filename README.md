@@ -1,11 +1,18 @@
 # raptor
 
+## Raptor
+
 A Rust library for implementing Forward Error Correction (FEC) using Raptor codes.
 
 Raptor codes are a class of FEC codes that are designed to be highly efficient in the presence of packet erasures.
 This library provides functionality for encoding source blocks into encoding symbols and decoding source blocks from a set of encoding symbols.
 
+This library implements on the fly Gaussian Elimination to spread  decoding complexity during packets reception.
+
 ## Examples
+
+Encode and decode a source block using `raptor::encode_source_block` and `raptor::decode_source_block`
+
 
 ```rust
 
@@ -31,4 +38,13 @@ let reconstructed_data = raptor::decode_source_block(&received_symbols, nb_sourc
 
 // Source data and decoded data should be identical
 assert!(reconstructed_data == source_data)
+```
+
+## Credit
+
+RFC 5053 <https://www.rfc-editor.org/rfc/rfc5053.html>
+
+On the fly Gaussian Elimination for LT codes, Valerio Bioglio, Marco Grangetto, 2009
+
+Reuse ideas and concepts of [gofountain](https://github.com/google/gofountain)
 
