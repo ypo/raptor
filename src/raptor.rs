@@ -83,11 +83,15 @@ impl Raptor {
         self.l_prime
     }
 
+    pub fn add_encoding_symbol(&mut self, encoding_symbol: &EncodingSymbol) {
+        let indices = common::find_lt_indices(self.k, encoding_symbol.esi, self.l, self.l_prime);
+        self.matrix
+            .add_equation(indices, encoding_symbol.data.to_vec());
+    }
+
     pub fn add_encoding_symbols(&mut self, encoding_symbols: &[EncodingSymbol]) -> bool {
         for symbols in encoding_symbols {
-            let x = symbols.esi;
-            let indices = common::find_lt_indices(self.k, x as u32, self.l, self.l_prime);
-            self.matrix.add_equation(indices, symbols.data.to_vec());
+            self.add_encoding_symbol(symbols);
         }
         self.matrix.fully_specified()
     }
@@ -128,7 +132,7 @@ impl Raptor {
         Some(out)
     }
 
-    pub fn is_decoded(&self) -> bool {
+    pub fn fully_specified(&self) -> bool {
         self.matrix.fully_specified()
     }
 }
@@ -180,7 +184,7 @@ mod tests {
         let mut raptor = super::Raptor::new(blocks.len() as u32);
         raptor.add_encoding_symbols(&encoding_symbols);
 
-        assert!(raptor.is_decoded());
+        assert!(raptor.fully_specified());
 
         let out = raptor.decode(count).unwrap();
 

@@ -328,6 +328,8 @@ pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
 
 ///
 /// Finds the disjunctive union of two sorted slices of integers.
+/// 
+/// The result is the XOR operation of two rows in the spare matrix
 ///
 /// # Parameters
 ///

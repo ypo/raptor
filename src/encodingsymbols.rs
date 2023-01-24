@@ -4,6 +4,10 @@ pub struct EncodingSymbol<'a> {
 }
 
 impl<'a> EncodingSymbol<'a> {
+    pub fn new(data: &'a [u8], esi: u32) -> Self {
+        EncodingSymbol { data, esi }
+    }
+
     pub fn from_block(block: &[Vec<u8>]) -> Vec<EncodingSymbol> {
         block
             .iter()
