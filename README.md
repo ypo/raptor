@@ -1,5 +1,7 @@
 # raptor
 
+[![Rust](https://github.com/ypo/raptor/actions/workflows/rust.yml/badge.svg)](https://github.com/ypo/raptor/actions/workflows/rust.yml)
+
 ## Raptor
 
 A Rust library for implementing Forward Error Correction (FEC) using Raptor codes.

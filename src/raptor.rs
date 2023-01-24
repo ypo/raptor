@@ -109,7 +109,7 @@ impl Raptor {
             return None;
         }
 
-        self.matrix.reduce();
+        self.reduce();
 
         let mut source: Vec<Vec<u8>> = Vec::new();
         for i in 0..self.k {
@@ -191,5 +191,13 @@ mod tests {
 
         assert!(out.len() == count);
         assert!(out == expected_output);
+    }
+
+    #[test]
+    fn test_decode_empty() {
+        let mut raptor = super::Raptor::new(64);
+        assert!(raptor.fully_specified() == false);
+        let out = raptor.decode(1024, 4);
+        assert!(out.is_none());
     }
 }

@@ -246,8 +246,9 @@ pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8>
     block
 }
 
+/*
 ///
-/// Partitions a number into semi-equal pieces.  
+/// Partitions a number into semi-equal pieces.
 ///
 /// # Parameters
 ///
@@ -281,6 +282,7 @@ pub fn _partition(i: usize, j: usize) -> (usize, usize, usize, usize) {
 
     (il, is, jl, js)
 }
+*/
 
 /// Performs a bitwise exclusive or (XOR) operation on two slices of bytes.
 ///
