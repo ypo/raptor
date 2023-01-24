@@ -17,7 +17,8 @@
 //! let source_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
 //! let encoding_symbol_length = 3;
 //! let source_block:Vec<Vec<u8>> = source_data.chunks(encoding_symbol_length)
-//!                                     .map(|source_symbol| source_symbol.to_vec()).collect();
+//!                                            .map(|source_symbol| source_symbol.to_vec())
+//!                                            .collect();
 //! let nb_repair = 3;
 //!
 //!
@@ -29,13 +30,58 @@
 //! let nb_source_symbols = source_block.len();
 //! let source_block_length = source_data.len();
 //!
-//! let mut received_symbols: Vec<Option<Vec<u8>>> = encoding_symbols.into_iter().map(|symbols| Some(symbols)).collect();
-//! received_symbols[0] = None; // simulate encoding symbol ESI=0 lost
+//! let mut received_symbols: Vec<Option<Vec<u8>>> = encoding_symbols.into_iter()
+//!                                                                  .map(|symbols| Some(symbols))
+//!                                                                  .collect();
 //!
-//! let reconstructed_data = raptor::decode_source_block(&received_symbols, nb_source_symbols, source_block_length).unwrap();
+//! // simulate encoding symbol lost
+//! received_symbols[0] = None;
+//!
+//! let reconstructed_data = raptor::decode_source_block(&received_symbols,
+//!                                                       nb_source_symbols,
+//!                                                       source_block_length).unwrap();
 //!
 //! // Source data and decoded data should be identical
 //! assert!(reconstructed_data == source_data)
+//! ```
+//!
+//! Generating encoding symbol on the fly
+//!
+//! ```
+//! let source_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
+//! let encoding_symbol_length = 3;
+//! let source_block:Vec<Vec<u8>> = source_data.chunks(encoding_symbol_length)
+//!                                            .map(|source_symbol| source_symbol.to_vec())
+//!                                            .collect();
+//!
+//! let mut encoder = raptor::SourceBlockEncoder::new(&source_block);
+//! let n = source_block.len() + 3;
+//!
+//! for esi in 0..n as u32 {
+//!     let encoding_symbol = encoder.fountain(esi);
+//!     //TODO transfer symbol over Network
+//! }
+//!
+//! ```
+//!
+//! On the fly source block decoding
+//!
+//! ```
+//! let encoding_symbol_length = 1024;
+//! let source_block_size = 4; // Number of source symbols in the source block
+//! let mut n = 0u32;
+//! let mut decoder = raptor::SourceBlockDecoder::new(source_block_size);
+//!
+//! while decoder.fully_specified() == false {
+//!     //TODO receive encoding symbol from Network
+//!     let (encoding_symbol, esi) = (vec![0; encoding_symbol_length],n);
+//!     decoder.push_encoding_symbol(&encoding_symbol, n);
+//!     n += 1;
+//! }
+//!
+//! let source_block_size = encoding_symbol_length  * source_block_size;
+//! let source_block = decoder.decode(source_block_size as usize);
+//!
 //! ```
 //!
 //! # Credit
