@@ -9,7 +9,7 @@ This library provides functionality for encoding source blocks into encoding sym
 
 This library implements on the fly Gaussian Elimination to spread  decoding complexity during packets reception.
 
-## Examples
+## Example : Source Block Encoder/Decoder
 
 Encode and decode a source block using `raptor::encode_source_block` and `raptor::decode_source_block`
 
@@ -47,7 +47,7 @@ let reconstructed_data = raptor::decode_source_block(&received_symbols,
 assert!(reconstructed_data == source_data)
 ```
 
-Generating encoding symbol on the fly
+## Example : On the fly encoder
 
 ```rust
 let source_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
@@ -65,8 +65,7 @@ for esi in 0..n as u32 {
 }
 
 ```
-
-On the fly source block decoding
+## Example : On the fly decoder
 
 ```rust
 let encoding_symbol_length = 1024;

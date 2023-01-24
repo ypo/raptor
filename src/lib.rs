@@ -7,7 +7,7 @@
 //!
 //! This library implements on the fly Gaussian Elimination to spread  decoding complexity during packets reception.
 //!
-//! # Examples
+//! # Example : Source Block Encoder/Decoder
 //!
 //! Encode and decode a source block using `raptor::encode_source_block` and `raptor::decode_source_block`
 //!
@@ -45,7 +45,7 @@
 //! assert!(reconstructed_data == source_data)
 //! ```
 //!
-//! Generating encoding symbol on the fly
+//! # Example : On the fly encoder
 //!
 //! ```
 //! let source_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
@@ -63,8 +63,7 @@
 //! }
 //!
 //! ```
-//!
-//! On the fly source block decoding
+//! # Example : On the fly decoder
 //!
 //! ```
 //! let encoding_symbol_length = 1024;
