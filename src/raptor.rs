@@ -104,7 +104,7 @@ impl Raptor {
         &self.matrix.intermediate
     }
 
-    pub fn decode(&mut self, size: usize) -> Option<Vec<u8>> {
+    pub fn decode(&mut self, size: usize, encoding_symbol_size: usize) -> Option<Vec<u8>> {
         if !self.matrix.fully_specified() {
             return None;
         }
@@ -118,16 +118,15 @@ impl Raptor {
             source.push(block);
         }
 
-        let (len_long, len_short, num_long, num_short) = common::partition(size, self.k as usize);
+        // let (len_long, len_short, num_long, num_short) = common::partition(size, self.k as usize);
+        let k = (size as f64 / encoding_symbol_size as f64).ceil() as usize;
 
         let mut out = Vec::new();
-        for i in 0..num_long {
-            out.extend(source[i][0..len_long].to_vec());
+        for i in 0..k {
+            out.extend(source[i][0..encoding_symbol_size].to_vec());
         }
 
-        for i in 0..num_short {
-            out.extend(source[num_long + i][0..len_short].to_vec());
-        }
+        out.resize(size, 0);
 
         Some(out)
     }
@@ -186,7 +185,7 @@ mod tests {
 
         assert!(raptor.fully_specified());
 
-        let out = raptor.decode(count).unwrap();
+        let out = raptor.decode(count, 4).unwrap();
 
         log::debug!("{:?} / {:?}", out, expected_output);
 

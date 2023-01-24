@@ -41,7 +41,9 @@ received_symbols[0] = None;
 
 let reconstructed_data = raptor::decode_source_block(&received_symbols,
                                                       nb_source_symbols,
-                                                      source_block_length).unwrap();
+                                                      source_block_length,
+                                                      encoding_symbol_length)
+                                                      .unwrap();
 
 // Source data and decoded data should be identical
 assert!(reconstructed_data == source_data)
@@ -81,7 +83,7 @@ while decoder.fully_specified() == false {
 }
 
 let source_block_size = encoding_symbol_length  * source_block_size;
-let source_block = decoder.decode(source_block_size as usize);
+let source_block = decoder.decode(source_block_size as usize, encoding_symbol_length);
 
 ```
 

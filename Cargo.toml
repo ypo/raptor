@@ -2,8 +2,17 @@
 name = "raptor"
 version = "0.1.0"
 edition = "2021"
+authors = ["Yannick Poirier <contact@yannickpoirier.fr>"]
+description = "A Rust library for implementing Forward Error Correction (FEC) using Raptor codes."
+homepage = "https://github.com/ypo/raptor"
+repository = "https://github.com/ypo/raptor"
+categories = ["network-programming", "encoding", "aerospace::space-protocols"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "raptor"
+path = "src/lib.rs"
 
 [dependencies]
 log  = "0.4"

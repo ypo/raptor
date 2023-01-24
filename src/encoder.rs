@@ -116,7 +116,7 @@ mod tests {
         encoded_block[1] = None;
 
         let output =
-            crate::decoder::decode_source_block(&encoded_block, blocks.len(), count).unwrap();
+            crate::decoder::decode_source_block(&encoded_block, blocks.len(), count, 4).unwrap();
         log::debug!("{:?} / {:?}", output, expected_output);
         assert!(output.len() == count);
         assert!(output == expected_output);

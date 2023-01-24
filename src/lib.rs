@@ -39,7 +39,9 @@
 //!
 //! let reconstructed_data = raptor::decode_source_block(&received_symbols,
 //!                                                       nb_source_symbols,
-//!                                                       source_block_length).unwrap();
+//!                                                       source_block_length,
+//!                                                       encoding_symbol_length)
+//!                                                       .unwrap();
 //!
 //! // Source data and decoded data should be identical
 //! assert!(reconstructed_data == source_data)
@@ -79,7 +81,7 @@
 //! }
 //!
 //! let source_block_size = encoding_symbol_length  * source_block_size;
-//! let source_block = decoder.decode(source_block_size as usize);
+//! let source_block = decoder.decode(source_block_size as usize, encoding_symbol_length);
 //!
 //! ```
 //!
@@ -91,6 +93,10 @@
 //!
 //! Reuse ideas and concepts of [gofountain](https://github.com/google/gofountain)
 //!
+
+#![deny(missing_docs)]
+#![cfg_attr(test, deny(warnings))]
+
 mod common;
 mod decoder;
 mod encoder;

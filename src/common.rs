@@ -48,7 +48,7 @@ fn prime_greater_or_equal(p: u64) -> u64 {
     p
 }
 
-/// 
+///
 /// Calculates the number of ways n objects can be chosen from among r objects without repetition.
 ///
 /// # Parameters
@@ -76,28 +76,6 @@ fn choose(n: u64, r: u64) -> u64 {
 /// An unsigned 64-bit integer representing the factorial of the given number `n`.
 fn factorial(n: u64) -> u64 {
     (1..=n).product()
-}
-
-///
-/// Counts the number of bits that are set in a given unsigned 64-bit integer.
-///
-/// # Parameters
-///
-/// * `x`: The integer to count the set bits of.
-///
-/// # Returns
-///
-/// An unsigned 64-bit integer representing the number of bits that are set in the given integer.
-///
-/// This algorithm uses bit shifts and bitwise ANDs to sum up the set bits in a tree-like fashion.
-/// It first performs bit shifts and ANDs to group the bits into smaller clusters,
-/// and then adds them up to get the final count of set bits.
-fn nb_bits_set(x: u64) -> u64 {
-    let mut x = x;
-    x -= (x >> 1) & 0x5555555555555555;
-    x = (x & 0x3333333333333333) + ((x >> 2) & 0x3333333333333333);
-    x = (x + (x >> 4)) & 0x0f0f0f0f0f0f0f0f;
-    (x * 0x0101010101010101) >> 56
 }
 
 /// Checks if a specific bit of an integer is set.
@@ -133,7 +111,7 @@ pub fn gray_sequence(length: usize, b: u32) -> Vec<u32> {
     let mut x = 0u64;
     loop {
         let g = (x >> 1) ^ x; // Gray code
-        if nb_bits_set(g) == b as u64 {
+        if g.count_ones() == b {
             s[i] = g as u32;
             i += 1;
             if i >= length {
@@ -288,7 +266,7 @@ pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8>
 /// It divides the number `i` into `j` semi-equal pieces and returns the sizes of the longer and shorter pieces,
 /// as well as the number of longer and shorter pieces.
 ///
-pub fn partition(i: usize, j: usize) -> (usize, usize, usize, usize) {
+pub fn _partition(i: usize, j: usize) -> (usize, usize, usize, usize) {
     let mut il = (i as f64 / j as f64).ceil() as usize;
     let mut is = (i as f64 / j as f64).floor() as usize;
     let jl = i - (is * j);
@@ -328,7 +306,7 @@ pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
 
 ///
 /// Finds the disjunctive union of two sorted slices of integers.
-/// 
+///
 /// The result is the XOR operation of two rows in the spare matrix
 ///
 /// # Parameters
