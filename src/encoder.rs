@@ -2,16 +2,24 @@ use crate::common;
 use crate::encodingsymbols::EncodingSymbol;
 use crate::raptor;
 
+/// A struct that represents a source block encoder that uses Raptor codes.
 pub struct SourceBlockEncoder {
     intermediate: Vec<Vec<u8>>,
     k: u32,
     l: u32,
     l_prime: u32,
-    esi: u32,
 }
 
 impl SourceBlockEncoder {
-    // Create a source block encoder, passing the list of source symbols
+    /// Create a source block encoder, passing the list of source symbols
+    ///
+    /// # Parameters
+    ///
+    /// * `source_block`: A slice of vectors containing the source symbols.
+    ///
+    /// # Returns
+    ///
+    /// A new `SourceBlockEncoder` instance.
     pub fn new(source_block: &[Vec<u8>]) -> Self {
         let k = source_block.len() as u32;
         let mut decoder = raptor::Raptor::new(k);
@@ -24,19 +32,23 @@ impl SourceBlockEncoder {
             k: k,
             l: decoder.get_l(),
             l_prime: decoder.get_l_prime(),
-            esi: 0,
         }
     }
 
-    /// Generate the next encoding symbol
+    /// Generates an encoding symbol with the specified Encoding Symbol Identifier (ESI).
+    ///
+    /// This method generates a encoding symbol using the Raptor code and the intermediate symbols generated during the initialization of the encoder.
+    ///
+    /// # Parameters
+    ///
+    /// * `esi`: The Encoding Symbol Identifier (ESI) of the desired encoding symbol.
     ///
     /// # Returns
-    /// (EncodingSymbols, ESI)
-    pub fn fountain(&mut self) -> (Vec<u8>, u32) {
+    ///
+    /// A tuple containing:
+    /// * `Vec<u8>` : The generated encoding symbol
+    pub fn fountain(&mut self, esi: u32) -> Vec<u8> {
         let mut block = Vec::new();
-        let esi = self.esi;
-        self.esi += 1;
-
         let indices = common::find_lt_indices(self.k, esi, self.l, self.l_prime);
         for indice in indices {
             if indice < self.intermediate.len() as u32 {
@@ -44,17 +56,29 @@ impl SourceBlockEncoder {
             }
         }
 
-        (block, esi)
+        block
     }
 }
 
+///
+/// Encodes a source block into encoding symbols using Raptor codes.
+///
+/// # Parameters
+///
+/// * `source_block`: A slice of vectors containing the source symbols.
+/// * `nb_repair`: The number of repair symbols to be generated.
+///
+/// # Returns
+///
+/// A vector of vectors of bytes representing the encoding symbols (source symbols + repair symbol).
+/// The function uses Raptor codes to generate the specified number of repair symbols from the source block.
+///
 pub fn encode_source_block(source_block: &[Vec<u8>], nb_repair: usize) -> Vec<Vec<u8>> {
     let mut encoder = SourceBlockEncoder::new(&source_block);
     let mut output: Vec<Vec<u8>> = Vec::new();
     let n = source_block.len() + nb_repair;
-    for _ in 0..n {
-        let (encoded_symbol, _) = encoder.fountain();
-        output.push(encoded_symbol);
+    for esi in 0..n as u32 {
+        output.push(encoder.fountain(esi));
     }
     output
 }

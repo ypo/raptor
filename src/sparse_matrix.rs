@@ -1,5 +1,10 @@
 use crate::common;
 
+/// Sparce Matrix
+///
+/// Original implementation
+/// https://github.com/google/gofountain/blob/master/block.go
+///
 pub struct SparseMatrix {
     // Indices of the source blocks which are xor-ed together
     // | 0 0 1 1 |          [[ 2, 3],
@@ -20,6 +25,10 @@ impl SparseMatrix {
         }
     }
 
+    ///
+    /// algo from gofountain project
+    /// https://github.com/google/gofountain
+    ///
     pub fn add_equation(&mut self, components: Vec<u32>, b: Vec<u8>) {
         let mut components = components;
         let mut b = b;
@@ -57,7 +66,9 @@ impl SparseMatrix {
         }
     }
 
-    /// Gaussian Elimination
+    /// Gaussian Elimination.  
+    /// Algo from from gofountain project
+    /// https://github.com/google/gofountain
     pub fn reduce(&mut self) {
         for i in (0..self.coeff.len()).rev() {
             for j in 0..i {

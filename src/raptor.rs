@@ -135,6 +135,10 @@ impl Raptor {
 
 #[cfg(test)]
 mod tests {
+
+    // Unit test from gofountain project
+    // https://github.com/google/gofountain
+
     use crate::encodingsymbols::EncodingSymbol;
 
     #[test]

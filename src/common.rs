@@ -1,16 +1,22 @@
 use crate::tables::{SYSTEMATIC_INDEX, V0, V1};
 
-/// RFC section 5.4.2.3
-/// computes L, S, and H from K
+/// Computes the number of intermediate symbols (L), the first prime number greater than or equal to L (L_prime),
+/// the number of LDPC symbols (S), and the number of half-symbols (H) from the number of source symbols (K),
+/// as specified in RFC section 5.4.2.3.
 ///
-/// K is the number of source symbols
+/// # Parameters
+///
+/// * `k`: The number of source symbols.
 ///
 /// # Returns
-/// L the number of intermediate symbols desired (K+S+H)
-/// L_prime first prime number >= L
-/// S number of LDPC symbols
-/// H number of half-symbols
-/// H' = ceil(H/2)
+///
+/// A tuple containing:
+/// * `L`: The number of intermediate symbols desired (K+S+H)
+/// * `L_prime`: The first prime number greater than or equal to L
+/// * `S`: The number of LDPC symbols
+/// * `H`: The number of half-symbols
+/// * `H_prime`: ceil(H/2)
+///
 pub fn intermediate_symbols(k: u32) -> (u32, u32, u32, u32, u32) {
     // X be the smallest positive integer such that X*(X-1) >= 2*K.
     // X^2 - X - 2k >= 0
