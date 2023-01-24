@@ -1,4 +1,3 @@
-
 name: Open a release PR
 on:
   workflow_dispatch:
@@ -10,6 +9,10 @@ on:
 
 jobs:
   make-release-pr:
+    permissions:
+      id-token: write # Enable OIDC
+      pull-requests: write
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
