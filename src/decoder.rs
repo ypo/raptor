@@ -50,13 +50,8 @@ impl SourceBlockDecoder {
     ///
     /// * `None` if the source block cannot be decoded
     /// * `Some(Vec<u8>)` if the block is decoded. The vector contains the decoded source block data
-    pub fn decode(
-        &mut self,
-        source_block_length: usize,
-        encoding_symbol_size: usize,
-    ) -> Option<Vec<u8>> {
-        self.raptor
-            .decode(source_block_length, encoding_symbol_size)
+    pub fn decode(&mut self, source_block_length: usize) -> Option<Vec<u8>> {
+        self.raptor.decode(source_block_length)
     }
 }
 
@@ -67,7 +62,6 @@ impl SourceBlockDecoder {
 /// * `encoding_symbols`: A list of available encoding symbols. Missing encoding symbols should be represented as `None`.
 /// * `nb_source_symbols`: The number of source symbols in the block (k).
 /// * `source_block_length`: The size of the source block in bytes.
-/// * `encoding_symbol_size`: Size of an encoding symbol
 ///
 /// # Returns
 ///
@@ -78,10 +72,9 @@ pub fn decode_source_block(
     encoding_symbols: &[Option<Vec<u8>>],
     nb_source_symbols: usize,
     source_block_length: usize,
-    encoding_symbol_size: usize,
 ) -> Option<Vec<u8>> {
     let encoding_symbols = EncodingSymbol::from_option_block(encoding_symbols);
     let mut raptor = raptor::Raptor::new(nb_source_symbols as u32);
     raptor.add_encoding_symbols(&encoding_symbols);
-    raptor.decode(source_block_length, encoding_symbol_size)
+    raptor.decode(source_block_length)
 }

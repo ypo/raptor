@@ -1,5 +1,5 @@
 use crate::common;
-use crate::encodingsymbols::EncodingSymbol;
+use crate::partition::Partition;
 use crate::raptor;
 
 /// A struct that represents a source block encoder that uses Raptor codes.
@@ -16,23 +16,30 @@ impl SourceBlockEncoder {
     /// # Parameters
     ///
     /// * `source_block`: A slice of vectors containing the source symbols.
+    /// * `max_source_symbols`: Max number of source symbols inside the source block
     ///
     /// # Returns
     ///
     /// A new `SourceBlockEncoder` instance.
-    pub fn new(source_block: &[Vec<u8>]) -> Self {
+    pub fn new(source_block: &[u8], max_source_symbols: usize) -> Self {
+        let partition = Partition::new(source_block.len(), max_source_symbols);
+        let source_block = partition.create_source_block(source_block);
         let k = source_block.len() as u32;
-        let mut decoder = raptor::Raptor::new(k);
-        let source_block = EncodingSymbol::from_block(source_block);
-        decoder.add_encoding_symbols(&source_block);
-        decoder.reduce();
+        let mut raptor = raptor::Raptor::new(k);
+        raptor.add_encoding_symbols(&source_block);
+        raptor.reduce();
 
         SourceBlockEncoder {
-            intermediate: decoder.intermediate_symbols().to_vec(),
-            k: k,
-            l: decoder.get_l(),
-            l_prime: decoder.get_l_prime(),
+            intermediate: raptor.intermediate_symbols().to_vec(),
+            k,
+            l: raptor.get_l(),
+            l_prime: raptor.get_l_prime(),
         }
+    }
+
+    /// Return the number of source symbols (k) inside the block
+    pub fn nb_source_symbols(&self) -> u32 {
+        self.k
     }
 
     /// Generates an encoding symbol with the specified Encoding Symbol Identifier (ESI).
@@ -66,21 +73,30 @@ impl SourceBlockEncoder {
 /// # Parameters
 ///
 /// * `source_block`: A slice of vectors containing the source symbols.
+/// * `max_source_symbols`: Max number of source symbols inside the source block
 /// * `nb_repair`: The number of repair symbols to be generated.
 ///
 /// # Returns
 ///
-/// A vector of vectors of bytes representing the encoding symbols (source symbols + repair symbol).
+/// a Tuple
+/// * `Vec<Vec<u8>>` : A vector of vectors of bytes representing the encoding symbols (source symbols + repair symbol).
+/// * `u32` : Number of source symbols (k)
+///
+///
 /// The function uses Raptor codes to generate the specified number of repair symbols from the source block.
 ///
-pub fn encode_source_block(source_block: &[Vec<u8>], nb_repair: usize) -> Vec<Vec<u8>> {
-    let mut encoder = SourceBlockEncoder::new(&source_block);
+pub fn encode_source_block(
+    source_block: &[u8],
+    max_source_symbols: usize,
+    nb_repair: usize,
+) -> (Vec<Vec<u8>>, u32) {
+    let mut encoder = SourceBlockEncoder::new(source_block, max_source_symbols);
     let mut output: Vec<Vec<u8>> = Vec::new();
-    let n = source_block.len() + nb_repair;
+    let n = encoder.nb_source_symbols() as usize + nb_repair;
     for esi in 0..n as u32 {
         output.push(encoder.fountain(esi));
     }
-    output
+    (output, encoder.nb_source_symbols())
 }
 
 #[cfg(test)]
@@ -90,35 +106,28 @@ mod tests {
     fn test_source_block_encoder() {
         crate::tests::init();
 
-        let blocks = vec![
-            vec![1, 2, 7, 4],
-            vec![0, 2, 54, 4],
-            vec![1, 1, 10, 200],
-            vec![1, 21, 3, 80],
-        ];
-
+        let input: Vec<u8> = vec![1, 2, 7, 4, 0, 2, 54, 4, 1, 1, 10, 200, 1, 21, 3, 80];
+        let max_source_symbols = 4;
         let nb_repair = 3;
-        let encoded_block = super::encode_source_block(&blocks, nb_repair);
+
+        let (encoded_block, k) = super::encode_source_block(&input, max_source_symbols, nb_repair);
+        log::debug!("Encoded with {} blocks", k);
+
+        // Try to decode the source block
+
         let mut encoded_block: Vec<Option<Vec<u8>>> = encoded_block
             .into_iter()
             .map(|symbols| Some(symbols))
             .collect();
-
-        let mut count: usize = 0;
-        let mut expected_output: Vec<u8> = Vec::new();
-        for b in &blocks {
-            count += b.len();
-            expected_output.extend(b)
-        }
 
         // Simulate loss
         encoded_block[0] = None;
         encoded_block[1] = None;
 
         let output =
-            crate::decoder::decode_source_block(&encoded_block, blocks.len(), count, 4).unwrap();
-        log::debug!("{:?} / {:?}", output, expected_output);
-        assert!(output.len() == count);
-        assert!(output == expected_output);
+            crate::decoder::decode_source_block(&encoded_block, k as usize, input.len()).unwrap();
+        log::debug!("{:?} / {:?}", output, input);
+        assert!(output.len() == input.len());
+        assert!(output == input);
     }
 }

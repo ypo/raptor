@@ -8,17 +8,6 @@ impl<'a> EncodingSymbol<'a> {
         EncodingSymbol { data, esi }
     }
 
-    pub fn from_block(block: &[Vec<u8>]) -> Vec<EncodingSymbol> {
-        block
-            .iter()
-            .enumerate()
-            .map(|(esi, symbols)| EncodingSymbol {
-                data: symbols.as_ref(),
-                esi: esi as u32,
-            })
-            .collect()
-    }
-
     pub fn from_option_block(block: &[Option<Vec<u8>>]) -> Vec<EncodingSymbol> {
         block
             .iter()

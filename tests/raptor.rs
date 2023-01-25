@@ -17,24 +17,6 @@ mod tests {
         output
     }
 
-    fn create_source_block(data: &[u8], encoding_symbol_size: usize) -> Vec<Vec<u8>> {
-        data.chunks(encoding_symbol_size)
-            .map(|data| {
-                let mut source_symbols = data.to_vec();
-                source_symbols.resize(encoding_symbol_size, 0);
-                source_symbols
-            })
-            .collect()
-    }
-
-    fn encode(data: &[u8], encoding_symbol_size: usize, nb_repair: usize) -> (Vec<Vec<u8>>, usize) {
-        let source_block = create_source_block(data, encoding_symbol_size);
-        (
-            raptor_code::encode_source_block(&source_block, nb_repair),
-            source_block.len(),
-        )
-    }
-
     fn network_transfer(encoding_symbols: &[Vec<u8>], loss: u32) -> Vec<Option<Vec<u8>>> {
         let mut output = Vec::new();
         let mut rng = rand::thread_rng();
@@ -61,19 +43,18 @@ mod tests {
 
         assert!(source_block_data.len() == source_block_length);
 
-        let (encoding_symbols, nb_source_symbols) =
-            encode(&source_block_data, encoding_symbol_size, nb_repair);
+        let max_source_symbols =
+            (source_block_length as f64 / encoding_symbol_size as f64).ceil() as usize;
+
+        let (encoding_symbols, k) =
+            raptor_code::encode_source_block(&source_block_data, max_source_symbols, nb_repair);
 
         // Simulate network transfer
         let received_symbols = network_transfer(&encoding_symbols, network_loss);
 
-        let decoded_source_block = raptor_code::decode_source_block(
-            &received_symbols,
-            nb_source_symbols,
-            source_block_length,
-            encoding_symbol_size,
-        )
-        .unwrap();
+        let decoded_source_block =
+            raptor_code::decode_source_block(&received_symbols, k as usize, source_block_length)
+                .unwrap();
 
         assert!(decoded_source_block.len() == source_block_data.len());
         assert!(decoded_source_block == source_block_data);

@@ -1,5 +1,6 @@
 use crate::common;
 use crate::encodingsymbols::EncodingSymbol;
+use crate::partition::Partition;
 use crate::sparse_matrix::SparseMatrix;
 
 pub struct Raptor {
@@ -104,31 +105,22 @@ impl Raptor {
         &self.matrix.intermediate
     }
 
-    pub fn decode(&mut self, size: usize, encoding_symbol_size: usize) -> Option<Vec<u8>> {
+    pub fn decode(&mut self, size: usize) -> Option<Vec<u8>> {
         if !self.matrix.fully_specified() {
             return None;
         }
 
         self.reduce();
 
-        let mut source: Vec<Vec<u8>> = Vec::new();
+        let mut source_block: Vec<Vec<u8>> = Vec::new();
         for i in 0..self.k {
             let block =
                 common::lt_encode(self.k, i, self.l, self.l_prime, &self.matrix.intermediate);
-            source.push(block);
+            source_block.push(block);
         }
 
-        // let (len_long, len_short, num_long, num_short) = common::partition(size, self.k as usize);
-        let k = (size as f64 / encoding_symbol_size as f64).ceil() as usize;
-
-        let mut out = Vec::new();
-        for i in 0..k {
-            out.extend(source[i][0..encoding_symbol_size].to_vec());
-        }
-
-        out.resize(size, 0);
-
-        Some(out)
+        let partition = Partition::new(size, self.k as usize);
+        Some(partition.decode_source_block(&source_block))
     }
 
     pub fn fully_specified(&self) -> bool {
@@ -142,7 +134,7 @@ mod tests {
     // Unit test from gofountain project
     // https://github.com/google/gofountain
 
-    use crate::encodingsymbols::EncodingSymbol;
+    use crate::partition::Partition;
 
     #[test]
     fn test_raptor_matrix() {
@@ -157,47 +149,27 @@ mod tests {
     fn test_raptor() {
         crate::tests::init();
 
-        let blocks = vec![
-            vec![1, 2, 7, 4],
-            vec![0, 2, 54, 4],
-            vec![1, 1, 10, 200],
-            vec![1, 21, 3, 80],
-        ];
+        let input: Vec<u8> = vec![1, 2, 7, 4, 0, 2, 54, 4, 1, 1, 10, 200, 1, 21, 3, 80];
+        let partition = Partition::new(input.len(), 4);
+        let encoding_symbols = partition.create_source_block(&input);
 
-        let encoding_symbols: Vec<EncodingSymbol> = blocks
-            .iter()
-            .enumerate()
-            .map(|(esi, symbols)| EncodingSymbol {
-                data: symbols.as_ref(),
-                esi: esi as u32,
-            })
-            .collect();
-
-        let mut count: usize = 0;
-        let mut expected_output: Vec<u8> = Vec::new();
-        for block in &blocks {
-            count += block.len();
-            expected_output.extend(block);
-        }
-
-        let mut raptor = super::Raptor::new(blocks.len() as u32);
+        let mut raptor = super::Raptor::new(encoding_symbols.len() as u32);
         raptor.add_encoding_symbols(&encoding_symbols);
 
         assert!(raptor.fully_specified());
 
-        let out = raptor.decode(count, 4).unwrap();
+        let out = raptor.decode(input.len()).unwrap();
 
-        log::debug!("{:?} / {:?}", out, expected_output);
-
-        assert!(out.len() == count);
-        assert!(out == expected_output);
+        log::debug!("{:?} / {:?}", out, input);
+        assert!(out.len() == input.len());
+        assert!(out == input);
     }
 
     #[test]
     fn test_decode_empty() {
         let mut raptor = super::Raptor::new(64);
         assert!(raptor.fully_specified() == false);
-        let out = raptor.decode(1024, 4);
+        let out = raptor.decode(1024);
         assert!(out.is_none());
     }
 }

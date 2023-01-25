@@ -246,44 +246,6 @@ pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8>
     block
 }
 
-/*
-///
-/// Partitions a number into semi-equal pieces.
-///
-/// # Parameters
-///
-/// * `i`: The number to be partitioned.
-/// * `j`: The number of pieces the number should be partitioned into.
-///
-/// # Returns
-///
-/// A tuple containing:
-/// * `il` : The size of the longer pieces
-/// * `is` : The size of the shorter pieces
-/// * `jl` : The number of longer pieces
-/// * `js` : The number of shorter pieces
-///
-/// This function follows the block partitioning algorithm specified in RFC 5053 section 5.3.1.2.
-/// It divides the number `i` into `j` semi-equal pieces and returns the sizes of the longer and shorter pieces,
-/// as well as the number of longer and shorter pieces.
-///
-pub fn _partition(i: usize, j: usize) -> (usize, usize, usize, usize) {
-    let mut il = (i as f64 / j as f64).ceil() as usize;
-    let mut is = (i as f64 / j as f64).floor() as usize;
-    let jl = i - (is * j);
-    let js = j - jl;
-
-    if jl == 0 {
-        il = 0
-    }
-    if js == 0 {
-        is = 0
-    }
-
-    (il, is, jl, js)
-}
-*/
-
 /// Performs a bitwise exclusive or (XOR) operation on two slices of bytes.
 ///
 /// # Parameters

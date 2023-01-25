@@ -1,7 +1,7 @@
 //! [![Rust](https://github.com/ypo/raptor/actions/workflows/rust.yml/badge.svg)](https://github.com/ypo/raptor/actions/workflows/rust.yml)
 //! [![codecov](https://codecov.io/gh/ypo/raptor/branch/main/graph/badge.svg?token=P4KE639YU8)](https://codecov.io/gh/ypo/raptor)
 //! [![Crates.io](https://img.shields.io/crates/v/raptor-code)](https://crates.io/crates/raptor-code/)
-//! 
+//!
 //! # Raptor Code
 //!
 //! A Rust library for implementing Forward Error Correction (FEC) using Raptor codes.
@@ -19,32 +19,24 @@
 //! ```
 //!
 //! let source_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
-//! let encoding_symbol_length = 3;
-//! let source_block:Vec<Vec<u8>> = source_data.chunks(encoding_symbol_length)
-//!                                            .map(|source_symbol| source_symbol.to_vec())
-//!                                            .collect();
+//! let max_source_symbols = 4;
 //! let nb_repair = 3;
 //!
-//!
 //! // Step 1 - Generate the encoding symbols (source symbols + repair symbols)
-//! let encoding_symbols = raptor_code::encode_source_block(&source_block, nb_repair);
+//! let (encoding_symbols, nb_source_symbols) = raptor_code::encode_source_block(&source_data, max_source_symbols, nb_repair);
 //!
 //! // Step 2 - Re-construct the source data from the encoding symbols
 //!
-//! let nb_source_symbols = source_block.len();
 //! let source_block_length = source_data.len();
-//!
 //! let mut received_symbols: Vec<Option<Vec<u8>>> = encoding_symbols.into_iter()
 //!                                                                  .map(|symbols| Some(symbols))
 //!                                                                  .collect();
-//!
 //! // simulate encoding symbol lost
 //! received_symbols[0] = None;
 //!
 //! let reconstructed_data = raptor_code::decode_source_block(&received_symbols,
-//!                                                       nb_source_symbols,
-//!                                                       source_block_length,
-//!                                                       encoding_symbol_length)
+//!                                                       nb_source_symbols as usize,
+//!                                                       source_block_length)
 //!                                                       .unwrap();
 //!
 //! // Source data and decoded data should be identical
@@ -55,17 +47,16 @@
 //!
 //! ```
 //! let source_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
-//! let encoding_symbol_length = 3;
-//! let source_block:Vec<Vec<u8>> = source_data.chunks(encoding_symbol_length)
-//!                                            .map(|source_symbol| source_symbol.to_vec())
-//!                                            .collect();
+//! let max_source_symbols = 4;
+//! let nb_repair = 3;
 //!
-//! let mut encoder = raptor_code::SourceBlockEncoder::new(&source_block);
-//! let n = source_block.len() + 3;
+//! let mut encoder = raptor_code::SourceBlockEncoder::new(&source_data, max_source_symbols);
+//! let n = encoder.nb_source_symbols() + nb_repair;
 //!
 //! for esi in 0..n as u32 {
 //!     let encoding_symbol = encoder.fountain(esi);
 //!     //TODO transfer symbol over Network
+//!     // network_push_pkt(encoding_symbol);
 //! }
 //!
 //! ```
@@ -85,7 +76,7 @@
 //! }
 //!
 //! let source_block_size = encoding_symbol_length  * source_block_size;
-//! let source_block = decoder.decode(source_block_size as usize, encoding_symbol_length);
+//! let source_block = decoder.decode(source_block_size as usize);
 //!
 //! ```
 //!
@@ -105,6 +96,7 @@ mod common;
 mod decoder;
 mod encoder;
 mod encodingsymbols;
+mod partition;
 mod raptor;
 mod sparse_matrix;
 mod tables;
