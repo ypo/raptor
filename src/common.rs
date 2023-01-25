@@ -271,47 +271,42 @@ pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
 }
 
 ///
-/// Finds the disjunctive union of two sorted slices of integers.
+/// Finds the symmetric difference of two sorted slices of integers.
 ///
-/// The result is the XOR operation of two rows in the spare matrix
+/// The result is the XOR operation of two rows in the sparse matrix
 ///
 /// # Parameters
 ///
-/// * `row_1`: The first slice of integers.
+/// * `row_1`: The first slice of integers. The function modifies this slice in place to store the result of the symmetric difference.
 /// * `row_2`: The second slice of integers.
 ///
-/// # Returns
+/// # Note
 ///
-/// A vector of integers representing the disjunctive union of the input slices.
-///
-/// The function assumes that the input slices are sorted and finds
-/// the disjunctive union of the two slices by iterating through them and comparing the corresponding elements.
-/// It adds the elements that are not present in both slices and returns the resulting vector of integers.
-pub fn disjunctive_union(row_1: &[u32], row_2: &[u32]) -> Vec<u32> {
-    let mut output: Vec<u32> = Vec::new();
-
+/// * The function assumes that the input slices are sorted.
+/// * The function modifies the input `row_1` slice in place to store the result of the symmetric difference.
+pub fn symmetric_difference(row_1: &mut Vec<u32>, row_2: &[u32]) {
     let mut i = 0;
     let mut j = 0;
-    while i < row_1.len() && j < row_2.len() {
+
+    let jl = row_2.len();
+    while i < row_1.len() && j < jl {
         let v_1 = row_1[i];
         let v_2 = row_2[j];
-        if v_1 == v_2 as u32 {
-            // remove intersection
-            i += 1;
+        if v_1 == v_2 {
+            // Remove union element
+            row_1.remove(i);
             j += 1;
-        } else if v_1 < v_2 {
-            output.push(v_1);
-            i += 1;
+        } else if v_2 < v_1 {
+            row_1.insert(i, v_2);
+            j += 1;
+            i += 1
         } else {
-            output.push(v_2);
-            j += 1;
+            i += 1;
         }
     }
 
-    // Append remaining elements from row1 and row2 if any
-    output.extend(&row_1[i..]);
-    output.extend(&row_2[j..]);
-    output
+    // Add remaining elements
+    row_1.extend(&row_2[j..]);
 }
 
 #[cfg(test)]

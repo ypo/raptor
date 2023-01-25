@@ -56,7 +56,7 @@ impl SparseMatrix {
             // if EqOnes ≥ NumOnes[s] then
             if components.len() >= self.coeff[s as usize].len() {
                 // NewEq <- NewEq ^ G[s]
-                components = common::disjunctive_union(&self.coeff[s as usize], &components);
+                common::symmetric_difference(&mut components, &self.coeff[s as usize]);
                 // NewY <- NewY ^ Y [s]
                 common::xor(&mut b, &self.intermediate[s as usize]);
             } else {
