@@ -18,16 +18,16 @@
 //!
 //! ```
 //!
-//! let source_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
+//! let source_block_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
 //! let max_source_symbols = 4;
 //! let nb_repair = 3;
+//! let source_block_length = source_block_data.len();
 //!
 //! // Step 1 - Generate the encoding symbols (source symbols + repair symbols)
-//! let (encoding_symbols, nb_source_symbols) = raptor_code::encode_source_block(&source_data, max_source_symbols, nb_repair);
+//! let (encoding_symbols, nb_source_symbols) = 
+//!         raptor_code::encode_source_block(&source_block_data, max_source_symbols, nb_repair);
 //!
 //! // Step 2 - Re-construct the source data from the encoding symbols
-//!
-//! let source_block_length = source_data.len();
 //! let mut received_symbols: Vec<Option<Vec<u8>>> = encoding_symbols.into_iter()
 //!                                                                  .map(|symbols| Some(symbols))
 //!                                                                  .collect();
@@ -40,7 +40,7 @@
 //!                                                       .unwrap();
 //!
 //! // Source data and decoded data should be identical
-//! assert!(reconstructed_data == source_data)
+//! assert!(reconstructed_data == source_block_data)
 //! ```
 //!
 //! # Example : On the fly encoder
@@ -69,9 +69,9 @@
 //! let mut decoder = raptor_code::SourceBlockDecoder::new(source_block_size);
 //!
 //! while decoder.fully_specified() == false {
-//!     //TODO receive encoding symbol from Network
+//!     //TODO replace the following line with pkt received from network
 //!     let (encoding_symbol, esi) = (vec![0; encoding_symbol_length],n);
-//!     decoder.push_encoding_symbol(&encoding_symbol, n);
+//!     decoder.push_encoding_symbol(&encoding_symbol, esi);
 //!     n += 1;
 //! }
 //!
