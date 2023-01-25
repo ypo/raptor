@@ -61,17 +61,18 @@ impl SparseMatrix {
                 common::xor(&mut b, &self.intermediate[s as usize]);
             } else {
                 // Swap matrix row with the new row
-                (self.coeff[s as usize], components) = (components, self.coeff[s as usize].clone());
-                (self.intermediate[s as usize], b) = (b, self.intermediate[s as usize].clone());
+                std::mem::swap(&mut self.coeff[s as usize], &mut components);
+                std::mem::swap(&mut self.intermediate[s as usize], &mut b);
             }
         }
 
         // if EqOnes > 0 then
         if components.len() > 0 {
+            let s = components[0] as usize;
             // G[s] <- NewEq
-            self.coeff[components[0] as usize] = components.clone();
+            self.coeff[s] = components;
             // Y [s] <- NewY
-            self.intermediate[components[0] as usize] = b.clone();
+            self.intermediate[s] = b;
         }
     }
 
