@@ -80,31 +80,20 @@ impl SparseMatrix {
         self.coeff.iter().find(|coeff| coeff.is_empty()).is_none()
     }
 
-    /// xor of 2 intermediate rows
-    fn intermediate_xor(&mut self, row_1: usize, row_2: usize) {
-        let l_2 = self.intermediate[row_2].len();
-        if self.intermediate[row_1].len() < l_2 {
-            self.intermediate[row_1].resize(l_2, 0);
-        }
-        for k in 0..l_2 {
-            self.intermediate[row_1][k] ^= self.intermediate[row_2][k];
-        }
-    }
-
     /// Gaussian Elimination.  
     /// Algo from from gofountain project
     /// https://github.com/google/gofountain
     pub fn reduce(&mut self) {
         for i in (0..self.coeff.len()).rev() {
+            let (row_j, row_i) = self.intermediate.split_at_mut(i);
             for j in 0..i {
                 for k in 1..self.coeff[j].len() {
                     if self.coeff[j][k] == self.coeff[i][0] {
-                        self.intermediate_xor(j, i);
+                        common::xor(&mut row_j[j], &row_i[0]);
                         continue;
                     }
                 }
             }
-
             self.coeff[i].resize(1, 0);
         }
     }

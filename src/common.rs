@@ -262,6 +262,8 @@ pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
         row_1.resize(row_2.len(), 0);
     }
 
+    //TODO improve performance by adding support for SSE or NEON
+
     row_1
         .iter_mut()
         .zip(row_2.iter())

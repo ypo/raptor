@@ -23,11 +23,6 @@ impl Partition {
     /// as well as the number of longer and shorter pieces.
     ///
     pub fn new(source_length: usize, nb_source_symbols: usize) -> Self {
-        log::debug!(
-            "source_length={} nb_source_symbols={}",
-            source_length,
-            nb_source_symbols
-        );
         let mut il = (source_length as f64 / nb_source_symbols as f64).ceil() as usize;
         let mut is = (source_length as f64 / nb_source_symbols as f64).floor() as usize;
         let jl = source_length - (is * nb_source_symbols);
@@ -39,8 +34,6 @@ impl Partition {
         if js == 0 {
             is = 0
         }
-
-        log::debug!("long_size={il} nb_long={jl} small_size={is} nb_small={js}",);
 
         Partition {
             long_size: il,
@@ -78,15 +71,6 @@ impl Partition {
 
     pub fn decode_source_block(&self, source_block: &[Vec<u8>]) -> Vec<u8> {
         let mut out = Vec::new();
-
-        log::debug!(
-            "{} {} {} {} / {}",
-            self.long_size,
-            self.nb_long,
-            self.small_size,
-            self.nb_small,
-            source_block.len()
-        );
 
         assert!(self.nb_long + self.nb_small == source_block.len());
         for i in 0..self.nb_long {

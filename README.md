@@ -90,3 +90,5 @@ On the fly Gaussian Elimination for LT codes, Valerio Bioglio, Marco Grangetto, 
 
 Reuse ideas and concepts of [gofountain](https://github.com/google/gofountain)
 
+
+License: MIT
