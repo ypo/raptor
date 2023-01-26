@@ -86,12 +86,12 @@ impl SparseMatrix {
     /// https://github.com/google/gofountain
     pub fn reduce(&mut self) {
         for i in (0..self.coeff.len()).rev() {
-            let (row_j, row_i) = self.intermediate.split_at_mut(i);
+            let (inter_j, inter_i) = self.intermediate.split_at_mut(i);
+            let first_coeff_i = self.coeff[i][0];
             for j in 0..i {
-                for k in 1..self.coeff[j].len() {
-                    if self.coeff[j][k] == self.coeff[i][0] {
-                        common::xor(&mut row_j[j], &row_i[0]);
-                        continue;
+                for k in &self.coeff[j] {
+                    if *k == first_coeff_i {
+                        common::xor(&mut inter_j[j], &inter_i[0]);
                     }
                 }
             }

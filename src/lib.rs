@@ -24,7 +24,7 @@
 //! let source_block_length = source_block_data.len();
 //!
 //! // Step 1 - Generate the encoding symbols (source symbols + repair symbols)
-//! let (encoding_symbols, nb_source_symbols) = 
+//! let (encoding_symbols, nb_source_symbols) =
 //!         raptor_code::encode_source_block(&source_block_data, max_source_symbols, nb_repair);
 //!
 //! // Step 2 - Re-construct the source data from the encoding symbols

@@ -257,17 +257,43 @@ pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8>
 /// If the length of the second slice of bytes is greater than the first one,
 /// the first slice of bytes is resized to match the length of the second slice.
 /// The function then performs a XOR operation on the corresponding elements of both slices.
+#[cfg(any(
+    not(any(target_arch = "x86", target_arch = "x86_64")),
+    not(target_feature = "avx2")
+))]
 pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
     if row_1.len() < row_2.len() {
         row_1.resize(row_2.len(), 0);
     }
 
-    //TODO improve performance by adding support for SSE or NEON
+    xor_u8(row_1, row_2)
+}
 
-    row_1
-        .iter_mut()
-        .zip(row_2.iter())
-        .for_each(|(v1, v2)| *v1 ^= *v2);
+/// Use LLVM’s auto-vectorization to produce optimized vectorized code for AVX2
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2"
+))]
+pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
+    if row_1.len() < row_2.len() {
+        row_1.resize(row_2.len(), 0);
+    }
+    // Note that this `unsafe` block is safe because we're testing
+    // that the `avx2` feature is indeed available on our CPU.
+    unsafe { _xor_u8_avx2(row_1, row_2) };
+}
+
+/// Use LLVM’s auto-vectorization to produce optimized vectorized code for AVX2
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+unsafe fn _xor_u8_avx2(row_1: &mut [u8], row_2: &[u8]) {
+    xor_u8(row_1, row_2) // the function below is inlined here
+}
+
+fn xor_u8(row_1: &mut [u8], row_2: &[u8]) {
+    for (v1, v2) in row_1.iter_mut().zip(row_2) {
+        *v1 ^= *v2
+    }
 }
 
 ///
