@@ -34,7 +34,7 @@ impl SourceBlockDecoder {
     }
 
     /// Return true when the block can be fully decoded
-    pub fn fully_specified(&mut self) -> bool {
+    pub fn fully_specified(&self) -> bool {
         self.raptor.fully_specified()
     }
 
