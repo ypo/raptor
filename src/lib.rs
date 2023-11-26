@@ -64,9 +64,10 @@
 //!
 //! ```
 //! let encoding_symbol_length = 1024;
-//! let source_block_size = 4; // Number of source symbols in the source block
+//! let nb_source_symbols = 4; // Number of source symbols in the source block
+//! let source_block_length = encoding_symbol_length  * nb_source_symbols; // Total size size of the block;
 //! let mut n = 0u32;
-//! let mut decoder = raptor_code::SourceBlockDecoder::new(source_block_size);
+//! let mut decoder = raptor_code::SourceBlockDecoder::new(nb_source_symbols);
 //!
 //! while decoder.fully_specified() == false {
 //!     //TODO replace the following line with pkt received from network
@@ -75,8 +76,7 @@
 //!     n += 1;
 //! }
 //!
-//! let source_block_size = encoding_symbol_length  * source_block_size;
-//! let source_block = decoder.decode(source_block_size as usize);
+//! let source_block = decoder.decode(source_block_length as usize);
 //!
 //! ```
 //!

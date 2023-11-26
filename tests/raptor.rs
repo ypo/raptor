@@ -60,6 +60,70 @@ mod tests {
         assert!(decoded_source_block == source_block_data);
     }
 
+    fn on_the_fly_encode(
+        source_block: &Vec<u8>,
+        max_source_symbols: usize,
+        nb_repair_symbols: u32,
+    ) -> Vec<Vec<u8>> {
+        let mut encoder = raptor_code::SourceBlockEncoder::new(&source_block, max_source_symbols);
+        let n = encoder.nb_source_symbols() + nb_repair_symbols;
+
+        let mut encoded_block = Vec::new();
+        for esi in 0..n as u32 {
+            let encoding_symbol = encoder.fountain(esi);
+            encoded_block.push(encoding_symbol);
+        }
+
+        encoded_block
+    }
+
+    fn on_the_fly_decode(
+        source_block_length: usize,
+        nb_source_symbols: usize,
+        encoded_block: &Vec<Option<Vec<u8>>>,
+    ) -> Option<Vec<u8>> {
+        let mut decoder = raptor_code::SourceBlockDecoder::new(nb_source_symbols);
+        for (esi, encoding_symbol) in encoded_block.iter().enumerate() {
+            if decoder.fully_specified() {
+                break;
+            }
+            if let Some(encoding_symbol) = encoding_symbol {
+                decoder.push_encoding_symbol(encoding_symbol, esi as u32);
+            }
+        }
+
+        assert!(decoder.fully_specified());
+        decoder.decode(source_block_length as usize)
+    }
+
+    fn on_the_fly_encode_decode(
+        source_block_length: usize,
+        max_source_symbols: usize,
+        nb_repair_symbols: u32,
+        network_loss: u32,
+    ) {
+        let source_block_data = create_source_block_data(source_block_length);
+
+        // Test block encoer
+        let encoding_symbols =
+            on_the_fly_encode(&source_block_data, max_source_symbols, nb_repair_symbols);
+
+        // Simulate packet loss
+        let received_encoding_symbols = network_transfer(&encoding_symbols, network_loss);
+
+        // Test block decoder
+        let decoded_source_block = on_the_fly_decode(
+            source_block_length,
+            max_source_symbols,
+            &received_encoding_symbols,
+        )
+        .unwrap();
+
+        // Check decoded block
+        assert!(decoded_source_block.len() == source_block_data.len());
+        assert!(decoded_source_block == source_block_data);
+    }
+
     #[test]
     pub fn test_encode_decode_100k_repair100_loss5() {
         init();
@@ -82,5 +146,11 @@ mod tests {
     pub fn test_encode_decode_1k_repair0() {
         init();
         encode_decode(1024, 1024, 0, 0);
+    }
+
+    #[test]
+    pub fn test_onthefly_3k_repair3_loss10_issue5() {
+        init();
+        on_the_fly_encode_decode(3684, 4, 3, 10);
     }
 }
