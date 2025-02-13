@@ -11,7 +11,7 @@ mod tests {
         let mut output = vec![0u8; length];
 
         // Random buffer
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         rng.fill_bytes(output.as_mut());
 
         output
@@ -19,10 +19,10 @@ mod tests {
 
     fn network_transfer(encoding_symbols: &[Vec<u8>], loss: u32) -> Vec<Option<Vec<u8>>> {
         let mut output = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for symbol in encoding_symbols {
-            let n = rng.gen_range(0..100); // generates a random number between 0 and 100
+            let n = rng.random_range(0..100); // generates a random number between 0 and 100
             if n < loss {
                 output.push(None);
             } else {
