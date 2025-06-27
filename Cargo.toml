@@ -2,6 +2,7 @@
 name = "raptor-code"
 version = "1.0.7"
 edition = "2021"
+rust-version = "1.71.0"
 authors = ["Yannick Poirier <contact@yannickpoirier.fr>"]
 description = "A Rust library for implementing Forward Error Correction (FEC) using Raptor codes."
 homepage = "https://github.com/ypo/raptor"
@@ -21,10 +22,15 @@ name = "encode"
 harness = false
 
 [dependencies]
-log  = "0.4"
+log = { version = "0.4", optional = true }
 primes = "0.4.0"
 
 [dev-dependencies]
 env_logger = "0.11"
+log = "0.4"
 rand = "0.9"
 criterion = "0.5"
+
+[features]
+# Optional logging feature
+feat-log = ["dep:log"]
