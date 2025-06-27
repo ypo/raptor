@@ -5,7 +5,7 @@ fn create_source_block_data(length: usize) -> Vec<u8> {
     let mut output = vec![0u8; length];
 
     // Random buffer
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     rng.fill_bytes(output.as_mut());
 
     output
