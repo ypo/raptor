@@ -8,7 +8,7 @@ impl<'a> EncodingSymbol<'a> {
         EncodingSymbol { data, esi }
     }
 
-    pub fn from_option_block(block: &[Option<Vec<u8>>]) -> Vec<EncodingSymbol> {
+    pub fn from_option_block(block: &[Option<Vec<u8>>]) -> Vec<EncodingSymbol<'_>> {
         block
             .iter()
             .enumerate()
