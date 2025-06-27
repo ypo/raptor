@@ -159,7 +159,9 @@ pub fn deg(v: u32) -> u32 {
         }
     }
 
+    #[cfg(feature = "feat-log")]
     log::error!("Cannot find valid degree");
+
     D[D.len() - 1]
 }
 
@@ -408,6 +410,7 @@ mod tests {
             let (l, l_prime, ..) = super::intermediate_symbols(test.k);
             let (d, a, b) = super::triple(test.k, test.x, l, l_prime);
 
+            #[cfg(feature = "feat-log")]
             log::info!("{}/{} {}/{} {}/{}", d, test.d, a, test.a, b, test.b);
 
             assert!(d == test.d);
