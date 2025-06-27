@@ -2,6 +2,7 @@
 name = "raptor-code"
 version = "1.0.7"
 edition = "2021"
+rust-version = "1.71.0"
 authors = ["Yannick Poirier <contact@yannickpoirier.fr>"]
 description = "A Rust library for implementing Forward Error Correction (FEC) using Raptor codes."
 homepage = "https://github.com/ypo/raptor"
