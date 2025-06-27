@@ -1,6 +1,5 @@
-use crate::common;
 use crate::partition::Partition;
-use crate::raptor;
+use crate::{common, raptor};
 
 /// A struct that represents a source block encoder that uses Raptor codes.
 pub struct SourceBlockEncoder {
@@ -16,7 +15,8 @@ impl SourceBlockEncoder {
     /// # Parameters
     ///
     /// * `source_block`: A slice of vectors containing the source symbols.
-    /// * `max_source_symbols`: Max number of source symbols inside the source block
+    /// * `max_source_symbols`: Max number of source symbols inside the source
+    ///   block
     ///
     /// # Returns
     ///
@@ -42,13 +42,16 @@ impl SourceBlockEncoder {
         self.k
     }
 
-    /// Generates an encoding symbol with the specified Encoding Symbol Identifier (ESI).
+    /// Generates an encoding symbol with the specified Encoding Symbol
+    /// Identifier (ESI).
     ///
-    /// This method generates a encoding symbol using the Raptor code and the intermediate symbols generated during the initialization of the encoder.
+    /// This method generates a encoding symbol using the Raptor code and the
+    /// intermediate symbols generated during the initialization of the encoder.
     ///
     /// # Parameters
     ///
-    /// * `esi`: The Encoding Symbol Identifier (ESI) of the desired encoding symbol.
+    /// * `esi`: The Encoding Symbol Identifier (ESI) of the desired encoding
+    ///   symbol.
     ///
     /// # Returns
     ///
@@ -67,7 +70,6 @@ impl SourceBlockEncoder {
     }
 }
 
-///
 /// Encodes a source block into encoding symbols using Raptor codes.
 ///
 /// # Parameters
@@ -79,12 +81,13 @@ impl SourceBlockEncoder {
 /// # Returns
 ///
 /// a Tuple
-/// * `Vec<Vec<u8>>` : A vector of vectors of bytes representing the encoding symbols (source symbols + repair symbol).
+/// * `Vec<Vec<u8>>` : A vector of vectors of bytes representing the encoding
+///   symbols (source symbols + repair symbol).
 /// * `u32` : Number of source symbols (k)
 ///
 ///
-/// The function uses Raptor codes to generate the specified number of repair symbols from the source block.
-///
+/// The function uses Raptor codes to generate the specified number of repair
+/// symbols from the source block.
 pub fn encode_source_block(
     source_block: &[u8],
     max_source_symbols: usize,

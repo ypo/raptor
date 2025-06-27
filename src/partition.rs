@@ -1,6 +1,5 @@
 use crate::encodingsymbols::EncodingSymbol;
 
-///
 /// Partitions a block into semi-equal pieces of symbols.
 pub struct Partition {
     pub long_size: usize,
@@ -10,18 +9,18 @@ pub struct Partition {
 }
 
 impl Partition {
-    ///
     /// Partitions a block into semi-equal pieces of symbols.
     ///
     /// # Parameters
     ///
     /// * `length`: The number to be partitioned.
-    /// * `nb_source_symbols`: The number of pieces the number should be partitioned into.
+    /// * `nb_source_symbols`: The number of pieces the number should be
+    ///   partitioned into.
     ///
-    /// This function follows the block partitioning algorithm specified in RFC 5053 section 5.3.1.2.
-    /// It divides the number `i` into `j` semi-equal pieces and returns the sizes of the longer and shorter pieces,
+    /// This function follows the block partitioning algorithm specified in RFC
+    /// 5053 section 5.3.1.2. It divides the number `i` into `j` semi-equal
+    /// pieces and returns the sizes of the longer and shorter pieces,
     /// as well as the number of longer and shorter pieces.
-    ///
     pub fn new(source_length: usize, nb_source_symbols: usize) -> Self {
         let mut il = (source_length as f64 / nb_source_symbols as f64).ceil() as usize;
         let mut is = (source_length as f64 / nb_source_symbols as f64).floor() as usize;

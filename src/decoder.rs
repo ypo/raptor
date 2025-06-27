@@ -1,6 +1,6 @@
-use crate::{encodingsymbols::EncodingSymbol, raptor};
+use crate::encodingsymbols::EncodingSymbol;
+use crate::raptor;
 
-///
 /// A struct that represents a source block decoder that uses Raptor codes.
 pub struct SourceBlockDecoder {
     raptor: raptor::Raptor,
@@ -26,7 +26,8 @@ impl SourceBlockDecoder {
     ///
     /// # Arguments
     ///
-    /// * `encoding_symbol` - A slice of u8 numbers representing the encoding symbol data
+    /// * `encoding_symbol` - A slice of u8 numbers representing the encoding
+    ///   symbol data
     /// * `esi` - Encoding symbol identifier (ESI)
     pub fn push_encoding_symbol(&mut self, encoding_symbol: &[u8], esi: u32) {
         let encoding_symbol = EncodingSymbol::new(encoding_symbol, esi);
@@ -49,7 +50,8 @@ impl SourceBlockDecoder {
     /// # Returns
     ///
     /// * `None` if the source block cannot be decoded
-    /// * `Some(Vec<u8>)` if the block is decoded. The vector contains the decoded source block data
+    /// * `Some(Vec<u8>)` if the block is decoded. The vector contains the
+    ///   decoded source block data
     pub fn decode(&mut self, source_block_length: usize) -> Option<Vec<u8>> {
         self.raptor.decode(source_block_length)
     }
@@ -59,15 +61,16 @@ impl SourceBlockDecoder {
 ///
 /// # Parameters
 ///
-/// * `encoding_symbols`: A list of available encoding symbols. Missing encoding symbols should be represented as `None`.
+/// * `encoding_symbols`: A list of available encoding symbols. Missing encoding
+///   symbols should be represented as `None`.
 /// * `nb_source_symbols`: The number of source symbols in the block (k).
 /// * `source_block_length`: The size of the source block in bytes.
 ///
 /// # Returns
 ///
-/// A vector of bytes representing the decoded source block, or `None` if the source block cannot be decoded.
-/// The function uses the available encoding symbols to reconstruct the original source block.
-///
+/// A vector of bytes representing the decoded source block, or `None` if the
+/// source block cannot be decoded. The function uses the available encoding
+/// symbols to reconstruct the original source block.
 pub fn decode_source_block(
     encoding_symbols: &[Option<Vec<u8>>],
     nb_source_symbols: usize,

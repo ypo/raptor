@@ -15,6 +15,7 @@ impl Raptor {
         let (l, l_prime, s, h, hp) = common::intermediate_symbols(k);
         let mut matrix = SparseMatrix::new(l as usize);
 
+        #[rustfmt::skip]
         // Generate the matrix A
         /*
           K               S       H

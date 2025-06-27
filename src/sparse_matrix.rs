@@ -6,7 +6,6 @@ use crate::common;
 /// https://github.com/google/gofountain/blob/master/block.go
 ///
 /// A^block = intermediate
-///
 pub struct SparseMatrix {
     /// Indices of the source blocks which are xor-ed together
     /// | 0 0 1 1 |          [[ 2, 3],
@@ -27,24 +26,23 @@ impl SparseMatrix {
         }
     }
 
-    ///
     /// On the fly Gaussian  Elimination (OFG)
     ///
     /// Add an XOR equation to the sparse matrix
     ///
     /// # Arguments
     ///
-    /// * `components` - A vector of u32 numbers representing the indices of the source blocks
+    /// * `components` - A vector of u32 numbers representing the indices of the
+    ///   source blocks
     /// * `b` - A vector of u8 numbers representing the intermediate symbols
     ///
     /// variant of Valerio Bioglio, Marco Grangetto algorithm,
     /// On the fly Gaussian Elimination for LT codes, 2009
     ///
-    /// OFG builds a triangular matrix G by exploiting every received packet starting from
-    /// the very first one.
+    /// OFG builds a triangular matrix G by exploiting every received packet
+    /// starting from the very first one.
     ///
     /// Spreads decoding complexity during packets reception
-    ///
     pub fn add_equation(&mut self, components: Vec<u32>, b: Vec<u8>) {
         let mut components = components;
         let mut b = b;

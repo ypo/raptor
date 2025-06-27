@@ -1,7 +1,8 @@
 use crate::tables::{SYSTEMATIC_INDEX, V0, V1};
 
-/// Computes the number of intermediate symbols (L), the first prime number greater than or equal to L (L_prime),
-/// the number of LDPC symbols (S), and the number of half-symbols (H) from the number of source symbols (K),
+/// Computes the number of intermediate symbols (L), the first prime number
+/// greater than or equal to L (L_prime), the number of LDPC symbols (S), and
+/// the number of half-symbols (H) from the number of source symbols (K),
 /// as specified in RFC section 5.4.2.3.
 ///
 /// # Parameters
@@ -16,14 +17,13 @@ use crate::tables::{SYSTEMATIC_INDEX, V0, V1};
 /// * `S`: The number of LDPC symbols
 /// * `H`: The number of half-symbols
 /// * `H_prime`: ceil(H/2)
-///
 pub fn intermediate_symbols(k: u32) -> (u32, u32, u32, u32, u32) {
     // X be the smallest positive integer such that X*(X-1) >= 2*K.
     // X^2 - X - 2k >= 0
     // det = b^ - 4ac
     let x = ((1f64 + f64::sqrt(1f64 + (8f64 * k as f64))) / 2f64).ceil() as u64;
 
-    //S be the smallest prime integer such that S >= ceil(0.01*K) + X
+    // S be the smallest prime integer such that S >= ceil(0.01*K) + X
     let s = (0.01f64 * k as f64).ceil() as u64 + x;
     let s = prime_greater_or_equal(s);
 
@@ -48,8 +48,8 @@ fn prime_greater_or_equal(p: u64) -> u64 {
     p
 }
 
-///
-/// Calculates the number of ways n objects can be chosen from among r objects without repetition.
+/// Calculates the number of ways n objects can be chosen from among r objects
+/// without repetition.
 ///
 /// # Parameters
 ///
@@ -58,7 +58,8 @@ fn prime_greater_or_equal(p: u64) -> u64 {
 ///
 /// # Returns
 ///
-/// An unsigned 64-bit integer representing the number of ways the objects can be chosen without repetition.
+/// An unsigned 64-bit integer representing the number of ways the objects can
+/// be chosen without repetition.
 ///
 /// The function uses the formula n! / (r! * (n - r)!) to calculate the result.
 fn choose(n: u64, r: u64) -> u64 {
@@ -73,7 +74,8 @@ fn choose(n: u64, r: u64) -> u64 {
 ///
 /// # Returns
 ///
-/// An unsigned 64-bit integer representing the factorial of the given number `n`.
+/// An unsigned 64-bit integer representing the factorial of the given number
+/// `n`.
 fn factorial(n: u64) -> u64 {
     (1..=n).product()
 }
@@ -87,13 +89,14 @@ fn factorial(n: u64) -> u64 {
 ///
 /// # Returns
 ///
-/// A Boolean indicating if the specified bit of the integer is set (true) or not (false).
-///
+/// A Boolean indicating if the specified bit of the integer is set (true) or
+/// not (false).
 pub fn bit_set(x: u32, b: u32) -> bool {
     return (x >> b) & 1 == 1;
 }
 
-/// Generates a sequence of Gray numbers that have exactly a specified number of bits set.
+/// Generates a sequence of Gray numbers that have exactly a specified number of
+/// bits set.
 ///
 /// # Parameters
 ///
@@ -102,8 +105,8 @@ pub fn bit_set(x: u32, b: u32) -> bool {
 ///
 /// # Returns
 ///
-/// A vector of 32-bit unsigned integers representing the generated Gray numbers.
-///
+/// A vector of 32-bit unsigned integers representing the generated Gray
+/// numbers.
 pub fn gray_sequence(length: usize, b: u32) -> Vec<u32> {
     let mut s = vec![0u32; length];
     let mut i = 0;
@@ -141,7 +144,6 @@ pub fn rand(x: u32, i: u32, m: u32) -> u32 {
 /// # Returns
 ///
 /// A 32-bit unsigned integer representing the degree value.
-///
 pub fn deg(v: u32) -> u32 {
     static F: [u32; 8] = [0, 10241, 491582, 712794, 831695, 948446, 1032189, 1048576];
     static D: [u32; 8] = [0, 1, 2, 3, 4, 10, 11, 40];
@@ -193,7 +195,6 @@ fn triple(k: u32, x: u32, _l: u32, l_prime: u32) -> (u32, u32, u32) {
     (d, a, b)
 }
 
-///
 /// Finds the LT indices
 ///
 /// # Parameters
@@ -226,7 +227,6 @@ pub fn find_lt_indices(k: u32, x: u32, l: u32, l_prime: u32) -> Vec<u32> {
     indices
 }
 
-///
 /// LT Encode
 ///
 /// # Parameters
@@ -236,7 +236,6 @@ pub fn find_lt_indices(k: u32, x: u32, l: u32, l_prime: u32) -> Vec<u32> {
 /// * `l`: The number of intermediate symbols desired (K+S+H)
 /// * `l_prime`:  The first prime number >= L
 /// * `c`: A slice containing the intermediate symbols
-///
 pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8> {
     let indices = find_lt_indices(k, x, l, l_prime);
     let mut block: Vec<u8> = Vec::new();
@@ -253,10 +252,11 @@ pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8>
 /// * `row_1`: The first slice of bytes to be used in the XOR operation.
 /// * `row_2`: The second slice of bytes to be used in the XOR operation.
 ///
-/// The function modifies the first slice of bytes in place and does not return any value.
-/// If the length of the second slice of bytes is greater than the first one,
-/// the first slice of bytes is resized to match the length of the second slice.
-/// The function then performs a XOR operation on the corresponding elements of both slices.
+/// The function modifies the first slice of bytes in place and does not return
+/// any value. If the length of the second slice of bytes is greater than the
+/// first one, the first slice of bytes is resized to match the length of the
+/// second slice. The function then performs a XOR operation on the
+/// corresponding elements of both slices.
 #[cfg(any(
     not(any(target_arch = "x86", target_arch = "x86_64")),
     not(target_feature = "avx2")
@@ -296,20 +296,21 @@ fn xor_u8(row_1: &mut [u8], row_2: &[u8]) {
     }
 }
 
-///
 /// Finds the symmetric difference of two sorted slices of integers.
 ///
 /// The result is the XOR operation of two rows in the sparse matrix
 ///
 /// # Parameters
 ///
-/// * `row_1`: The first slice of integers. The function modifies this slice in place to store the result of the symmetric difference.
+/// * `row_1`: The first slice of integers. The function modifies this slice in
+///   place to store the result of the symmetric difference.
 /// * `row_2`: The second slice of integers.
 ///
 /// # Note
 ///
 /// * The function assumes that the input slices are sorted.
-/// * The function modifies the input `row_1` slice in place to store the result of the symmetric difference.
+/// * The function modifies the input `row_1` slice in place to store the result
+///   of the symmetric difference.
 pub fn symmetric_difference(row_1: &mut Vec<u32>, row_2: &[u32]) {
     let mut i = 0;
     let mut j = 0;
@@ -399,7 +400,7 @@ mod tests {
         ];
 
         for test in &test_vector {
-            let (l, l_prime, _, _, _) = super::intermediate_symbols(test.k);
+            let (l, l_prime, ..) = super::intermediate_symbols(test.k);
             let (d, a, b) = super::triple(test.k, test.x, l, l_prime);
 
             log::info!("{}/{} {}/{} {}/{}", d, test.d, a, test.a, b, test.b);
@@ -505,7 +506,7 @@ mod tests {
         ];
 
         for test in &test_vector {
-            let (l, l_prime, _, _, _) = super::intermediate_symbols(test.k);
+            let (l, l_prime, ..) = super::intermediate_symbols(test.k);
             let indices = super::find_lt_indices(test.k, test.x, l, l_prime);
             log::info!("{:?} / {:?}", indices, test.indices);
             assert!(indices == test.indices);
