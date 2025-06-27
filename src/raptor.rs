@@ -1,3 +1,6 @@
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::common;
 use crate::encodingsymbols::EncodingSymbol;
 use crate::partition::Partition;
@@ -134,6 +137,9 @@ mod tests {
 
     // Unit test from gofountain project
     // https://github.com/google/gofountain
+
+    use alloc::vec;
+    use alloc::vec::Vec;
 
     use crate::partition::Partition;
 

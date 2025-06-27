@@ -93,9 +93,14 @@
 //! Grangetto, 2009
 //!
 //! Reuse ideas and concepts of [gofountain](https://github.com/google/gofountain)
-
+#![no_std]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
+
+extern crate alloc;
+
+#[cfg(any(test))]
+extern crate std;
 
 mod common;
 mod decoder;

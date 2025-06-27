@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::encodingsymbols::EncodingSymbol;
 
 /// Partitions a block into semi-equal pieces of symbols.

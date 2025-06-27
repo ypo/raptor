@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::partition::Partition;
 use crate::{common, raptor};
 
@@ -104,6 +106,8 @@ pub fn encode_source_block(
 
 #[cfg(test)]
 mod tests {
+    use alloc::vec;
+    use alloc::vec::Vec;
 
     #[test]
     fn test_source_block_encoder() {

@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 pub struct EncodingSymbol<'a> {
     pub data: &'a [u8],
     pub esi: u32,

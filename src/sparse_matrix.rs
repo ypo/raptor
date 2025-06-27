@@ -1,5 +1,7 @@
-use crate::common;
+use alloc::vec;
+use alloc::vec::Vec;
 
+use crate::common;
 /// Sparce Matrix
 ///
 /// Original implementation
@@ -59,8 +61,8 @@ impl SparseMatrix {
                 common::xor(&mut b, &self.intermediate[s as usize]);
             } else {
                 // Swap matrix row with the new row
-                std::mem::swap(&mut self.coeff[s as usize], &mut components);
-                std::mem::swap(&mut self.intermediate[s as usize], &mut b);
+                core::mem::swap(&mut self.coeff[s as usize], &mut components);
+                core::mem::swap(&mut self.intermediate[s as usize], &mut b);
             }
         }
 

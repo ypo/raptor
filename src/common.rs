@@ -1,3 +1,6 @@
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::tables::{SYSTEMATIC_INDEX, V0, V1};
 
 /// Computes the number of intermediate symbols (L), the first prime number
@@ -338,6 +341,8 @@ pub fn symmetric_difference(row_1: &mut Vec<u32>, row_2: &[u32]) {
 
 #[cfg(test)]
 mod tests {
+    use alloc::vec;
+    use alloc::vec::Vec;
 
     // Unit test from gofountain project
     // https://github.com/google/gofountain
