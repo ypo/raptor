@@ -29,7 +29,7 @@
 //!
 //! // Step 1 - Generate the encoding symbols (source symbols + repair symbols)
 //! let (encoding_symbols, nb_source_symbols) =
-//!     raptor_code::encode_source_block(&source_block_data, max_source_symbols, nb_repair);
+//!     raptor_code::encode_source_block(&source_block_data, max_source_symbols, nb_repair).unwrap();
 //!
 //! // Step 2 - Re-construct the source data from the encoding symbols
 //! let mut received_symbols: Vec<Option<Vec<u8>>> = encoding_symbols
@@ -57,7 +57,7 @@
 //! let max_source_symbols = 4;
 //! let nb_repair = 3;
 //!
-//! let mut encoder = raptor_code::SourceBlockEncoder::new(&source_data, max_source_symbols);
+//! let mut encoder = raptor_code::SourceBlockEncoder::new(&source_data, max_source_symbols).unwrap();
 //! let n = encoder.nb_source_symbols() + nb_repair;
 //!
 //! for esi in 0..n as u32 {

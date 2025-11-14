@@ -23,20 +23,26 @@ impl SourceBlockEncoder {
     /// # Returns
     ///
     /// A new `SourceBlockEncoder` instance.
-    pub fn new(source_block: &[u8], max_source_symbols: usize) -> Self {
+    pub fn new(source_block: &[u8], max_source_symbols: usize) -> Result<Self, &'static str> {
         let partition = Partition::new(source_block.len(), max_source_symbols);
         let source_block = partition.create_source_block(source_block);
         let k = source_block.len() as u32;
         let mut raptor = raptor::Raptor::new(k);
-        raptor.add_encoding_symbols(&source_block);
+        let fully_specified = raptor.add_encoding_symbols(&source_block);
+        if !fully_specified {
+            if k < 4 {
+                return Err("Source Block is partitionned in too few encoding symbols (k < 4), Raptor matrix is not fully specified");
+            }
+            return Err("Raptor matrix is not fully specified");
+        }
         raptor.reduce();
 
-        SourceBlockEncoder {
+        Ok(SourceBlockEncoder {
             intermediate: raptor.intermediate_symbols().to_vec(),
             k,
             l: raptor.get_l(),
             l_prime: raptor.get_l_prime(),
-        }
+        })
     }
 
     /// Return the number of source symbols (k) inside the block
@@ -94,14 +100,14 @@ pub fn encode_source_block(
     source_block: &[u8],
     max_source_symbols: usize,
     nb_repair: usize,
-) -> (Vec<Vec<u8>>, u32) {
-    let mut encoder = SourceBlockEncoder::new(source_block, max_source_symbols);
+) -> Result<(Vec<Vec<u8>>, u32), &'static str> {
+    let mut encoder = SourceBlockEncoder::new(source_block, max_source_symbols)?;
     let mut output: Vec<Vec<u8>> = Vec::new();
     let n = encoder.nb_source_symbols() as usize + nb_repair;
     for esi in 0..n as u32 {
         output.push(encoder.fountain(esi));
     }
-    (output, encoder.nb_source_symbols())
+    Ok((output, encoder.nb_source_symbols()))
 }
 
 #[cfg(test)]
@@ -117,7 +123,8 @@ mod tests {
         let max_source_symbols = 4;
         let nb_repair = 3;
 
-        let (encoded_block, k) = super::encode_source_block(&input, max_source_symbols, nb_repair);
+        let (encoded_block, k) =
+            super::encode_source_block(&input, max_source_symbols, nb_repair).unwrap();
         log::debug!("Encoded with {} blocks", k);
 
         // Try to decode the source block

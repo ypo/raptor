@@ -46,21 +46,16 @@ mod tests {
         let max_source_symbols =
             (source_block_length as f64 / encoding_symbol_size as f64).ceil() as usize;
 
-        let (encoding_symbols, k) = raptor_code::encode_source_block(
-            &source_block_data,
-            max_source_symbols,
-            nb_repair,
-        );
+        let (encoding_symbols, k) =
+            raptor_code::encode_source_block(&source_block_data, max_source_symbols, nb_repair)
+                .unwrap();
 
         // Simulate network transfer
         let received_symbols = network_transfer(&encoding_symbols, network_loss);
 
-        let decoded_source_block = raptor_code::decode_source_block(
-            &received_symbols,
-            k as usize,
-            source_block_length,
-        )
-        .unwrap();
+        let decoded_source_block =
+            raptor_code::decode_source_block(&received_symbols, k as usize, source_block_length)
+                .unwrap();
 
         assert!(decoded_source_block.len() == source_block_data.len());
         assert!(decoded_source_block == source_block_data);
@@ -72,7 +67,7 @@ mod tests {
         nb_repair_symbols: u32,
     ) -> Vec<Vec<u8>> {
         let mut encoder =
-            raptor_code::SourceBlockEncoder::new(&source_block, max_source_symbols);
+            raptor_code::SourceBlockEncoder::new(&source_block, max_source_symbols).unwrap();
         let n = encoder.nb_source_symbols() + nb_repair_symbols;
 
         let mut encoded_block = Vec::new();
