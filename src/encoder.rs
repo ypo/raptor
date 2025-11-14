@@ -20,9 +20,12 @@ impl SourceBlockEncoder {
     /// * `max_source_symbols`: Max number of source symbols inside the source
     ///   block
     ///
-    /// # Returns
+    /// Returns a `Result` containing:
+    /// - `Ok(SourceBlockEncoder)` if the encoder was successfully created.
+    /// - `Err(&'static str)` if the encoder could not be created (for example, 
+    ///   if the partitionning of the source_block results in
+    ///   too few encoding symbols (k < 4), leading to a not fully specified matrix).
     ///
-    /// A new `SourceBlockEncoder` instance.
     pub fn new(source_block: &[u8], max_source_symbols: usize) -> Result<Self, &'static str> {
         let partition = Partition::new(source_block.len(), max_source_symbols);
         let source_block = partition.create_source_block(source_block);
@@ -92,7 +95,9 @@ impl SourceBlockEncoder {
 /// * `Vec<Vec<u8>>` : A vector of vectors of bytes representing the encoding
 ///   symbols (source symbols + repair symbol).
 /// * `u32` : Number of source symbols (k)
-///
+/// * `Err(&'static str)` if the encoder could not be created.  
+///   This can happen, for example, if partitioning the `source_block` results in  
+///   too few encoding symbols (k < 4), which would lead to an under-specified matrix.
 ///
 /// The function uses Raptor codes to generate the specified number of repair
 /// symbols from the source block.

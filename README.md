@@ -6,40 +6,47 @@
 
 ## Raptor Code
 
-A Rust library for implementing Forward Error Correction (FEC) using Raptor codes.
+A Rust library for implementing Forward Error Correction (FEC) using Raptor
+codes.
 
-Raptor codes are a class of FEC codes that are designed to be highly efficient in the presence of packet erasures.
-This library provides functionality for encoding source blocks into encoding symbols and decoding source blocks from a set of encoding symbols.
+Raptor codes are a class of FEC codes that are designed to be highly
+efficient in the presence of packet erasures. This library provides
+functionality for encoding source blocks into encoding symbols and decoding
+source blocks from a set of encoding symbols.
 
-This library implements on the fly Gaussian Elimination to spread  decoding complexity during packets reception.
+This library implements on the fly Gaussian Elimination to spread  decoding
+complexity during packets reception.
 
 ## Example : Source Block Encoder/Decoder
 
-Encode and decode a source block using `raptor_code::encode_source_block` and `raptor_code::decode_source_block`
+Encode and decode a source block using `raptor_code::encode_source_block`
+and `raptor_code::decode_source_block`
 
 
 ```rust
-
-let source_block_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
+let source_block_data: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 let max_source_symbols = 4;
 let nb_repair = 3;
 let source_block_length = source_block_data.len();
 
 // Step 1 - Generate the encoding symbols (source symbols + repair symbols)
 let (encoding_symbols, nb_source_symbols) =
-        raptor_code::encode_source_block(&source_block_data, max_source_symbols, nb_repair);
+    raptor_code::encode_source_block(&source_block_data, max_source_symbols, nb_repair).unwrap();
 
 // Step 2 - Re-construct the source data from the encoding symbols
-let mut received_symbols: Vec<Option<Vec<u8>>> = encoding_symbols.into_iter()
-                                                                 .map(|symbols| Some(symbols))
-                                                                 .collect();
+let mut received_symbols: Vec<Option<Vec<u8>>> = encoding_symbols
+    .into_iter()
+    .map(|symbols| Some(symbols))
+    .collect();
 // simulate encoding symbol lost
 received_symbols[0] = None;
 
-let reconstructed_data = raptor_code::decode_source_block(&received_symbols,
-                                                      nb_source_symbols as usize,
-                                                      source_block_length)
-                                                      .unwrap();
+let reconstructed_data = raptor_code::decode_source_block(
+    &received_symbols,
+    nb_source_symbols as usize,
+    source_block_length,
+)
+.unwrap();
 
 // Source data and decoded data should be identical
 assert!(reconstructed_data == source_block_data)
@@ -48,19 +55,18 @@ assert!(reconstructed_data == source_block_data)
 ## Example : On the fly encoder
 
 ```rust
-let source_data: Vec<u8> = vec![1,2,3,4,5,6,7,8,9,10,11,12];
+let source_data: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 let max_source_symbols = 4;
 let nb_repair = 3;
 
-let mut encoder = raptor_code::SourceBlockEncoder::new(&source_data, max_source_symbols);
+let mut encoder = raptor_code::SourceBlockEncoder::new(&source_data, max_source_symbols).unwrap();
 let n = encoder.nb_source_symbols() + nb_repair;
 
 for esi in 0..n as u32 {
     let encoding_symbol = encoder.fountain(esi);
-    //TODO transfer symbol over Network
+    // TODO transfer symbol over Network
     // network_push_pkt(encoding_symbol);
 }
-
 ```
 ## Example : On the fly decoder
 
@@ -79,16 +85,15 @@ while decoder.fully_specified() == false {
 }
 
 let source_block = decoder.decode(source_block_length as usize);
-
 ```
 
 ## Credit
 
 RFC 5053 <https://www.rfc-editor.org/rfc/rfc5053.html>
 
-On the fly Gaussian Elimination for LT codes, Valerio Bioglio, Marco Grangetto, 2009
+On the fly Gaussian Elimination for LT codes, Valerio Bioglio, Marco
+Grangetto, 2009
 
 Reuse ideas and concepts of [gofountain](https://github.com/google/gofountain)
-
 
 License: MIT
