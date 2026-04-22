@@ -85,14 +85,21 @@ impl SparseMatrix {
     /// Algo from from gofountain project
     /// https://github.com/google/gofountain
     pub fn reduce(&mut self) {
-        for i in (0..self.coeff.len()).rev() {
-            let (inter_j, inter_i) = self.intermediate.split_at_mut(i);
+        // Build reverse index: coefficient value -> rows containing it
+        let l = self.coeff.len();
+        let mut reverse_index: Vec<Vec<usize>> = vec![Vec::new(); l];
+        for (j, row) in self.coeff.iter().enumerate() {
+            for &k in row {
+                reverse_index[k as usize].push(j);
+            }
+        }
+
+        for i in (0..l).rev() {
             let first_coeff_i = self.coeff[i][0];
-            for j in 0..i {
-                for k in &self.coeff[j] {
-                    if *k == first_coeff_i {
-                        common::xor(&mut inter_j[j], &inter_i[0]);
-                    }
+            let (inter_j, inter_i) = self.intermediate.split_at_mut(i);
+            for &j in &reverse_index[first_coeff_i as usize] {
+                if j < i {
+                    common::xor(&mut inter_j[j], &inter_i[0]);
                 }
             }
             self.coeff[i].resize(1, 0);
