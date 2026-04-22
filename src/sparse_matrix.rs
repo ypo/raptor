@@ -24,7 +24,7 @@ impl SparseMatrix {
     pub fn new(l: usize) -> Self {
         SparseMatrix {
             coeff: vec![Vec::new(); l],
-            intermediate: vec![vec![0; l]; l],
+            intermediate: vec![Vec::new(); l],
         }
     }
 
