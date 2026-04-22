@@ -317,28 +317,31 @@ fn xor_u8(row_1: &mut [u8], row_2: &[u8]) {
 /// * The function modifies the input `row_1` slice in place to store the result
 ///   of the symmetric difference.
 pub fn symmetric_difference(row_1: &mut Vec<u32>, row_2: &[u32]) {
+    let mut result = Vec::with_capacity(row_1.len() + row_2.len());
     let mut i = 0;
     let mut j = 0;
 
-    let jl = row_2.len();
-    while i < row_1.len() && j < jl {
-        let v_1 = row_1[i];
-        let v_2 = row_2[j];
-        if v_1 == v_2 {
-            // Remove union element
-            row_1.remove(i);
-            j += 1;
-        } else if v_2 < v_1 {
-            row_1.insert(i, v_2);
-            j += 1;
-            i += 1
-        } else {
-            i += 1;
+    while i < row_1.len() && j < row_2.len() {
+        use core::cmp::Ordering;
+        match row_1[i].cmp(&row_2[j]) {
+            Ordering::Equal => {
+                i += 1;
+                j += 1;
+            }
+            Ordering::Less => {
+                result.push(row_1[i]);
+                i += 1;
+            }
+            Ordering::Greater => {
+                result.push(row_2[j]);
+                j += 1;
+            }
         }
     }
 
-    // Add remaining elements
-    row_1.extend(&row_2[j..]);
+    result.extend_from_slice(&row_1[i..]);
+    result.extend_from_slice(&row_2[j..]);
+    *row_1 = result;
 }
 
 #[cfg(test)]
