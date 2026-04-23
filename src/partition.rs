@@ -61,10 +61,6 @@ impl Partition {
             output.push(EncodingSymbol::new(&source_data[start..end], esi));
             start += self.small_size;
             esi += 1;
-
-            if start >= source_data.len() {
-                break;
-            }
         }
 
         output
@@ -81,5 +77,62 @@ impl Partition {
             out.extend(source_block[self.nb_long + i][0..self.small_size].to_vec());
         }
         out
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Partition;
+    use alloc::vec::Vec;
+
+    fn round_trip(source_length: usize, nb_source_symbols: usize) {
+        let data: Vec<u8> = (0..source_length).map(|i| (i & 0xFF) as u8).collect();
+        let p = Partition::new(source_length, nb_source_symbols);
+
+        // Total elements must equal source length
+        let total = p.nb_long * p.long_size + p.nb_small * p.small_size;
+        assert_eq!(total, source_length, "partition total != source length");
+
+        let symbols = p.create_source_block(&data);
+        // Reassemble manually since decode_source_block expects Vec<Vec<u8>>
+        let blocks: Vec<Vec<u8>> = symbols.iter().map(|s| s.data.to_vec()).collect();
+        let reassembled = p.decode_source_block(&blocks);
+        assert_eq!(reassembled, data, "round-trip failed");
+    }
+
+    #[test]
+    fn test_partition_evenly_divisible() {
+        // 100 / 10 = 10, so all symbols should be the same size (no "long")
+        let p = Partition::new(100, 10);
+        assert_eq!(p.long_size, 0);
+        assert_eq!(p.nb_long, 0);
+        assert_eq!(p.small_size, 10);
+        assert_eq!(p.nb_small, 10);
+        round_trip(100, 10);
+    }
+
+    #[test]
+    fn test_partition_uneven() {
+        // 103 / 10 -> 3 long of size 11 + 7 small of size 10 (total 33+70=103)
+        let p = Partition::new(103, 10);
+        assert_eq!(p.long_size * p.nb_long + p.small_size * p.nb_small, 103);
+        round_trip(103, 10);
+    }
+
+    #[test]
+    fn test_partition_single_symbol() {
+        round_trip(42, 1);
+    }
+
+    #[test]
+    fn test_partition_smaller_than_nb_symbols() {
+        // 5 bytes split into 10 symbols -> some symbols are 1 byte, others 0
+        round_trip(5, 10);
+    }
+
+    #[test]
+    fn test_partition_large_round_trip() {
+        round_trip(64 * 1024, 64);
+        round_trip(100_000, 73);
     }
 }
