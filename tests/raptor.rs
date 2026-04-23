@@ -155,4 +155,115 @@ mod tests {
         init();
         on_the_fly_encode_decode(3684, 4, 3, 10);
     }
+
+    // -------------------------------------------------------------------
+    // Error-path / corner-case tests
+    // -------------------------------------------------------------------
+
+    #[test]
+    pub fn test_encode_source_block_too_small_returns_err() {
+        // max_source_symbols=3 partitions into k=3 (<4), which the encoder
+        // must reject as not fully specified.
+        init();
+        let data = vec![1u8, 2, 3, 4, 5, 6];
+        let result = raptor_code::encode_source_block(&data, 3, 5);
+        assert!(result.is_err(), "expected Err for k<4, got Ok");
+    }
+
+    #[test]
+    pub fn test_decode_source_block_insufficient_returns_none() {
+        // Encode then drop more symbols than nb_repair so decoding must fail.
+        init();
+        let source_block_length = 4096;
+        let data = create_source_block_data(source_block_length);
+        let max_source_symbols = 8;
+        let nb_repair = 2;
+
+        let (encoding_symbols, k) =
+            raptor_code::encode_source_block(&data, max_source_symbols, nb_repair).unwrap();
+
+        // Drop ALL symbols -> decoder must return None
+        let received: Vec<Option<Vec<u8>>> = encoding_symbols.iter().map(|_| None).collect();
+        let result =
+            raptor_code::decode_source_block(&received, k as usize, source_block_length);
+        assert!(result.is_none(), "expected None when no symbols received");
+    }
+
+    #[test]
+    pub fn test_decoder_not_fully_specified_returns_none() {
+        // Build a decoder, push fewer symbols than k, decode() must return None.
+        init();
+        let nb_source_symbols = 16;
+        let mut decoder = raptor_code::SourceBlockDecoder::new(nb_source_symbols);
+        assert!(!decoder.fully_specified());
+        // Push only 2 symbols (way less than k)
+        decoder.push_encoding_symbol(&vec![0u8; 64], 0);
+        decoder.push_encoding_symbol(&vec![0u8; 64], 1);
+        assert!(!decoder.fully_specified());
+        assert!(decoder.decode(64 * nb_source_symbols).is_none());
+    }
+
+    #[test]
+    pub fn test_systematic_fountain_returns_source_symbols() {
+        // After encoding, fountain(esi) for esi < k must equal the partitioned
+        // source symbol (systematic property used by N1 short-circuit).
+        init();
+        let source_block_length = 4096;
+        let encoding_symbol_size = 256;
+        let max_source_symbols =
+            (source_block_length + encoding_symbol_size - 1) / encoding_symbol_size;
+        let data = create_source_block_data(source_block_length);
+
+        let mut encoder =
+            raptor_code::SourceBlockEncoder::new(&data, max_source_symbols).unwrap();
+        let k = encoder.nb_source_symbols() as usize;
+
+        // Reconstruct expected source symbols by simple chunking (matches RFC partition
+        // when source_length is a multiple of nb_symbols).
+        assert_eq!(source_block_length % max_source_symbols, 0);
+        let chunk = source_block_length / max_source_symbols;
+        for esi in 0..k {
+            let expected = &data[esi * chunk..(esi + 1) * chunk];
+            let actual = encoder.fountain(esi as u32);
+            assert_eq!(
+                actual, expected,
+                "systematic property violated for esi={}",
+                esi
+            );
+        }
+    }
+
+    #[test]
+    pub fn test_decode_using_only_repair_symbols() {
+        // Drop ALL systematic symbols (esi < k) and decode using only repair symbols.
+        // Validates the LT decoding path end-to-end.
+        init();
+        let source_block_length = 8192;
+        let encoding_symbol_size = 256;
+        let max_source_symbols =
+            (source_block_length + encoding_symbol_size - 1) / encoding_symbol_size;
+        // Need enough repair symbols so we can recover from losing all source symbols.
+        let nb_repair = max_source_symbols + 8;
+        let data = create_source_block_data(source_block_length);
+
+        let (encoding_symbols, k) =
+            raptor_code::encode_source_block(&data, max_source_symbols, nb_repair).unwrap();
+
+        let received: Vec<Option<Vec<u8>>> = encoding_symbols
+            .iter()
+            .enumerate()
+            .map(|(esi, sym)| {
+                if (esi as u32) < k {
+                    None // drop all systematic
+                } else {
+                    Some(sym.clone())
+                }
+            })
+            .collect();
+
+        let decoded =
+            raptor_code::decode_source_block(&received, k as usize, source_block_length)
+                .expect("decoding using only repair symbols should succeed");
+        assert_eq!(decoded, data);
+    }
 }
