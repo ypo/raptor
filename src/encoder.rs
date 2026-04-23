@@ -6,6 +6,7 @@ use crate::{common, raptor};
 /// A struct that represents a source block encoder that uses Raptor codes.
 pub struct SourceBlockEncoder {
     intermediate: Vec<Vec<u8>>,
+    source_symbols: Vec<Vec<u8>>,
     k: u32,
     l: u32,
     l_prime: u32,
@@ -30,6 +31,9 @@ impl SourceBlockEncoder {
         let partition = Partition::new(source_block.len(), max_source_symbols);
         let source_block = partition.create_source_block(source_block);
         let k = source_block.len() as u32;
+        // Keep a copy of the source symbols for systematic short-circuit in fountain()
+        let source_symbols: Vec<Vec<u8>> =
+            source_block.iter().map(|s| s.data.to_vec()).collect();
         let mut raptor = raptor::Raptor::new(k);
         let fully_specified = raptor.add_encoding_symbols(&source_block);
         if !fully_specified {
@@ -42,6 +46,7 @@ impl SourceBlockEncoder {
 
         Ok(SourceBlockEncoder {
             intermediate: raptor.intermediate_symbols().to_vec(),
+            source_symbols,
             k,
             l: raptor.get_l(),
             l_prime: raptor.get_l_prime(),
@@ -69,6 +74,11 @@ impl SourceBlockEncoder {
     /// A tuple containing:
     /// * `Vec<u8>` : The generated encoding symbol
     pub fn fountain(&mut self, esi: u32) -> Vec<u8> {
+        // Systematic short-circuit: for esi < k, the encoding symbol is the source symbol itself.
+        if esi < self.k {
+            return self.source_symbols[esi as usize].clone();
+        }
+
         let mut block = Vec::new();
         let indices = common::find_lt_indices(self.k, esi, self.l, self.l_prime);
         for indice in indices {
