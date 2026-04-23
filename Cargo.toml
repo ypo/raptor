@@ -1,6 +1,6 @@
 [package]
 name = "raptor-code"
-version = "1.0.9"
+version = "1.0.10"
 edition = "2021"
 rust-version = "1.71.0"
 authors = ["Yannick Poirier <contact@yannickpoirier.fr>"]
