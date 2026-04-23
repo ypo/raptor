@@ -296,8 +296,18 @@ unsafe fn _xor_u8_avx2(row_1: &mut [u8], row_2: &[u8]) {
 }
 
 fn xor_u8(row_1: &mut [u8], row_2: &[u8]) {
-    for (v1, v2) in row_1.iter_mut().zip(row_2) {
-        *v1 ^= *v2
+    let len = row_1.len().min(row_2.len());
+    let mut i = 0;
+    let fast_end = len & !7; // round down to multiple of 8
+    while i < fast_end {
+        let a = u64::from_ne_bytes(row_1[i..i + 8].try_into().unwrap());
+        let b = u64::from_ne_bytes(row_2[i..i + 8].try_into().unwrap());
+        row_1[i..i + 8].copy_from_slice(&(a ^ b).to_ne_bytes());
+        i += 8;
+    }
+    while i < len {
+        row_1[i] ^= row_2[i];
+        i += 1;
     }
 }
 
