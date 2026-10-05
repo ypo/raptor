@@ -262,96 +262,138 @@ pub fn lt_encode(k: u32, x: u32, l: u32, l_prime: u32, c: &[Vec<u8>]) -> Vec<u8>
 /// first one, the first slice of bytes is resized to match the length of the
 /// second slice. The function then performs a XOR operation on the
 /// corresponding elements of both slices.
-#[cfg(any(
-    not(any(target_arch = "x86", target_arch = "x86_64")),
-    not(target_feature = "avx2")
-))]
+///
+/// On x86, the AVX2 code is selected at runtime when the CPU supports it.
 pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
     if row_1.len() < row_2.len() {
         row_1.resize(row_2.len(), 0);
+    }
+
+    #[cfg(all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(target_env = "sgx")
+    ))]
+    if cpu::has_avx2() {
+        // Safety: the CPU supports AVX2
+        unsafe { _xor_u8_avx2(row_1, row_2) };
+        return;
     }
 
     xor_u8(row_1, row_2)
 }
 
 /// Use LLVM’s auto-vectorization to produce optimized vectorized code for AVX2
+///
+/// # Safety
+///
+/// The CPU must support AVX2
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
-    target_feature = "avx2"
+    not(target_env = "sgx")
 ))]
-pub fn xor(row_1: &mut Vec<u8>, row_2: &[u8]) {
-    if row_1.len() < row_2.len() {
-        row_1.resize(row_2.len(), 0);
-    }
-    // Note that this `unsafe` block is safe because we're testing
-    // that the `avx2` feature is indeed available on our CPU.
-    unsafe { _xor_u8_avx2(row_1, row_2) };
-}
-
-/// Use LLVM’s auto-vectorization to produce optimized vectorized code for AVX2
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 #[target_feature(enable = "avx2")]
 unsafe fn _xor_u8_avx2(row_1: &mut [u8], row_2: &[u8]) {
     xor_u8(row_1, row_2) // the function below is inlined here
 }
 
+/// Fixed size blocks without bound checks, LLVM vectorizes and unrolls the
+/// inner loop
+#[inline(always)]
 fn xor_u8(row_1: &mut [u8], row_2: &[u8]) {
     let len = row_1.len().min(row_2.len());
-    let mut i = 0;
-    let fast_end = len & !7; // round down to multiple of 8
-    while i < fast_end {
-        let a = u64::from_ne_bytes(row_1[i..i + 8].try_into().unwrap());
-        let b = u64::from_ne_bytes(row_2[i..i + 8].try_into().unwrap());
-        row_1[i..i + 8].copy_from_slice(&(a ^ b).to_ne_bytes());
-        i += 8;
+    let mut c1 = row_1[..len].chunks_exact_mut(64);
+    let mut c2 = row_2[..len].chunks_exact(64);
+    for (a, b) in (&mut c1).zip(&mut c2) {
+        for (x, y) in a.iter_mut().zip(b) {
+            *x ^= *y;
+        }
     }
-    while i < len {
-        row_1[i] ^= row_2[i];
-        i += 1;
+    for (x, y) in c1.into_remainder().iter_mut().zip(c2.remainder()) {
+        *x ^= *y;
     }
 }
 
-/// Finds the symmetric difference of two sorted slices of integers.
+/// Runtime detection of the x86 CPU features used by the hot loops.
 ///
-/// The result is the XOR operation of two rows in the sparse matrix
-///
-/// # Parameters
-///
-/// * `row_1`: The first slice of integers. The function modifies this slice in
-///   place to store the result of the symmetric difference.
-/// * `row_2`: The second slice of integers.
-///
-/// # Note
-///
-/// * The function assumes that the input slices are sorted.
-/// * The function modifies the input `row_1` slice in place to store the result
-///   of the symmetric difference.
-pub fn symmetric_difference(row_1: &mut Vec<u32>, row_2: &[u32]) {
-    let mut result = Vec::with_capacity(row_1.len() + row_2.len());
-    let mut i = 0;
-    let mut j = 0;
+/// The features enabled at compile time (e.g. `-C target-cpu=native`) are
+/// used without any check. Otherwise CPUID is read once and cached, which
+/// also works in `no_std` (`std::is_x86_feature_detected!` is not
+/// available). CPUID can't be used inside SGX enclaves, which only use the
+/// compile time features.
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    not(target_env = "sgx")
+))]
+pub mod cpu {
+    #[cfg(target_arch = "x86")]
+    use core::arch::x86::{__cpuid, __cpuid_count, _xgetbv, has_cpuid};
+    #[cfg(target_arch = "x86_64")]
+    use core::arch::x86_64::{__cpuid, __cpuid_count, _xgetbv};
+    use core::sync::atomic::{AtomicU8, Ordering};
 
-    while i < row_1.len() && j < row_2.len() {
-        use core::cmp::Ordering;
-        match row_1[i].cmp(&row_2[j]) {
-            Ordering::Equal => {
-                i += 1;
-                j += 1;
+    const DETECTED: u8 = 1;
+    const POPCNT: u8 = 1 << 1;
+    const AVX2: u8 = 1 << 2;
+
+    /// Detected features, 0 until the first detection
+    static FEATURES: AtomicU8 = AtomicU8::new(0);
+
+    /// CPUID intrinsics are `unsafe` in older Rust versions and safe in newer
+    /// ones
+    #[allow(unused_unsafe)]
+    fn detect() -> u8 {
+        #[cfg(target_arch = "x86")]
+        if !has_cpuid() {
+            return DETECTED;
+        }
+
+        let mut features = DETECTED;
+        // Safety: CPUID is available (always on x86_64, checked on x86)
+        let max_leaf = unsafe { __cpuid(0) }.eax;
+        if max_leaf < 1 {
+            return features;
+        }
+        let leaf_1 = unsafe { __cpuid(1) };
+        if leaf_1.ecx & (1 << 23) != 0 {
+            features |= POPCNT;
+        }
+
+        // AVX2 needs the CPU support and the OS to save the AVX registers:
+        // OSXSAVE and AVX bits of leaf 1, SSE and AVX states enabled in XCR0
+        const OSXSAVE_AVX: u32 = (1 << 27) | (1 << 28);
+        if max_leaf >= 7 && leaf_1.ecx & OSXSAVE_AVX == OSXSAVE_AVX {
+            // Safety: OSXSAVE means that XGETBV is supported and enabled
+            let xcr0 = unsafe { _xgetbv(0) };
+            let leaf_7 = unsafe { __cpuid_count(7, 0) };
+            if xcr0 & 0b110 == 0b110 && leaf_7.ebx & (1 << 5) != 0 {
+                features |= AVX2;
             }
-            Ordering::Less => {
-                result.push(row_1[i]);
-                i += 1;
+        }
+        features
+    }
+
+    fn features() -> u8 {
+        match FEATURES.load(Ordering::Relaxed) {
+            0 => {
+                let features = detect();
+                FEATURES.store(features, Ordering::Relaxed);
+                features
             }
-            Ordering::Greater => {
-                result.push(row_2[j]);
-                j += 1;
-            }
+            features => features,
         }
     }
 
-    result.extend_from_slice(&row_1[i..]);
-    result.extend_from_slice(&row_2[j..]);
-    *row_1 = result;
+    /// The CPU supports AVX2
+    #[inline]
+    pub fn has_avx2() -> bool {
+        cfg!(target_feature = "avx2") || features() & AVX2 != 0
+    }
+
+    /// The CPU supports POPCNT
+    #[inline]
+    pub fn has_popcnt() -> bool {
+        cfg!(target_feature = "popcnt") || features() & POPCNT != 0
+    }
 }
 
 #[cfg(test)]
@@ -532,5 +574,47 @@ mod tests {
             log::info!("{:?} / {:?}", indices, test.indices);
             assert!(indices == test.indices);
         }
+    }
+
+    #[test]
+    fn test_xor() {
+        let lengths = [0, 1, 7, 8, 63, 64, 65, 127, 128, 129, 200, 1200];
+        for &len_1 in &lengths {
+            for &len_2 in &lengths {
+                let row_1: Vec<u8> = (0..len_1).map(|i| (i * 7 + 3) as u8).collect();
+                let row_2: Vec<u8> = (0..len_2).map(|i| (i * 13 + 5) as u8).collect();
+
+                let mut expected = row_1.clone();
+                expected.resize(len_1.max(len_2), 0);
+                for (a, b) in expected.iter_mut().zip(&row_2) {
+                    *a ^= *b;
+                }
+
+                let mut row = row_1.clone();
+                super::xor(&mut row, &row_2);
+                assert_eq!(row, expected, "len_1 {} len_2 {}", len_1, len_2);
+
+                let mut row = row_1.clone();
+                row.resize(len_1.max(len_2), 0);
+                super::xor_u8(&mut row, &row_2);
+                assert_eq!(row, expected, "generic len_1 {} len_2 {}", len_1, len_2);
+            }
+        }
+    }
+
+    #[cfg(all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(target_env = "sgx")
+    ))]
+    #[test]
+    fn test_cpu_features() {
+        assert_eq!(
+            super::cpu::has_avx2(),
+            std::is_x86_feature_detected!("avx2")
+        );
+        assert_eq!(
+            super::cpu::has_popcnt(),
+            std::is_x86_feature_detected!("popcnt")
+        );
     }
 }
