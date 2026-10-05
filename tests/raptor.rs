@@ -266,4 +266,90 @@ mod tests {
                 .expect("decoding using only repair symbols should succeed");
         assert_eq!(decoded, data);
     }
+
+    // -------------------------------------------------------------------
+    // Several K values, losses and reception orders
+    // -------------------------------------------------------------------
+
+    fn decode_in_order(
+        encoding_symbols: &[Vec<u8>],
+        order: &[usize],
+        nb_source_symbols: usize,
+        source_block_length: usize,
+        push_all: bool,
+    ) -> Vec<u8> {
+        let mut decoder = raptor_code::SourceBlockDecoder::new(nb_source_symbols);
+        for &esi in order {
+            if !push_all && decoder.fully_specified() {
+                break;
+            }
+            decoder.push_encoding_symbol(&encoding_symbols[esi], esi as u32);
+        }
+        assert!(decoder.fully_specified());
+        let decoded = decoder.decode(source_block_length).unwrap();
+        // A second decode gives the same result
+        assert!(decoder.decode(source_block_length).unwrap() == decoded);
+        decoded
+    }
+
+    #[test]
+    pub fn test_encode_decode_k_values_and_orders() {
+        use rand::seq::SliceRandom;
+        use rand::SeedableRng;
+
+        init();
+        for k in [1usize, 4, 5, 10, 63, 64, 65, 100, 1000] {
+            let mut rng = rand::rngs::StdRng::seed_from_u64(k as u64);
+            let encoding_symbol_size = 8 + k % 5;
+            // Not a multiple of k: the block has long and short source symbols
+            let source_block_length = k * encoding_symbol_size - k / 3;
+            let mut data = vec![0u8; source_block_length];
+            rng.fill_bytes(&mut data);
+            let nb_repair = k / 2 + 20;
+
+            let (encoding_symbols, nb_source_symbols) =
+                raptor_code::encode_source_block(&data, k, nb_repair).unwrap();
+            assert_eq!(nb_source_symbols as usize, k);
+            assert_eq!(encoding_symbols.len(), k + nb_repair);
+
+            // Drop 1 source symbol out of 3 (the only one when k = 1) and 1
+            // repair symbol out of 5
+            let is_received = |esi: usize| {
+                if esi < k {
+                    esi % 3 != 0
+                } else {
+                    esi % 5 != 0
+                }
+            };
+            let in_order: Vec<usize> = (0..encoding_symbols.len())
+                .filter(|&esi| is_received(esi))
+                .collect();
+            let repair_first: Vec<usize> = in_order
+                .iter()
+                .copied()
+                .filter(|&esi| esi >= k)
+                .chain(in_order.iter().copied().filter(|&esi| esi < k))
+                .collect();
+            let reverse: Vec<usize> = in_order.iter().rev().copied().collect();
+            let mut shuffled = in_order.clone();
+            shuffled.shuffle(&mut rng);
+
+            for order in [&in_order, &repair_first, &reverse, &shuffled] {
+                for push_all in [false, true] {
+                    let decoded =
+                        decode_in_order(&encoding_symbols, order, k, source_block_length, push_all);
+                    assert!(decoded == data, "k={} push_all={}", k, push_all);
+                }
+            }
+
+            let received: Vec<Option<Vec<u8>>> = encoding_symbols
+                .iter()
+                .enumerate()
+                .map(|(esi, symbol)| is_received(esi).then(|| symbol.clone()))
+                .collect();
+            let decoded =
+                raptor_code::decode_source_block(&received, k, source_block_length).unwrap();
+            assert!(decoded == data, "k={}", k);
+        }
+    }
 }

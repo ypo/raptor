@@ -147,9 +147,9 @@ mod tests {
     fn test_raptor_matrix() {
         crate::tests::init();
         let raptor = super::Raptor::new(10);
-        assert!(raptor.matrix.coeff[0] == vec![0, 5, 6, 7, 10]);
-        assert!(raptor.matrix.coeff[1] == vec![1, 2, 3, 8, 13]);
-        assert!(raptor.matrix.coeff[2] == vec![2, 3, 4, 7, 9, 14]);
+        assert!(raptor.matrix.row_indices(0) == vec![0, 5, 6, 7, 10]);
+        assert!(raptor.matrix.row_indices(1) == vec![1, 2, 3, 8, 13]);
+        assert!(raptor.matrix.row_indices(2) == vec![2, 3, 4, 7, 9, 14]);
     }
 
     #[test]
