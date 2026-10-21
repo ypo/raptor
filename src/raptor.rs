@@ -42,7 +42,7 @@ impl Raptor {
         // G_LDPC
         let mut composition: Vec<Vec<u32>> = vec![Vec::new(); s as usize];
         for i in 0..k {
-            let a = 1 + (i as f64 / s as f64).floor() as u32 % (s - 1);
+            let a = 1 + (i / s) % (s - 1);
             let b = i % s;
             composition[b as usize].push(i);
             let b = (b + a) % s;

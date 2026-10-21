@@ -24,8 +24,12 @@ impl Partition {
     /// pieces and returns the sizes of the longer and shorter pieces,
     /// as well as the number of longer and shorter pieces.
     pub fn new(source_length: usize, nb_source_symbols: usize) -> Self {
-        let mut il = (source_length as f64 / nb_source_symbols as f64).ceil() as usize;
-        let mut is = (source_length as f64 / nb_source_symbols as f64).floor() as usize;
+        let mut is = source_length.checked_div(nb_source_symbols).unwrap_or(0);
+        let mut il = if is * nb_source_symbols == source_length {
+            is
+        } else {
+            is + 1
+        };
         let jl = source_length - (is * nb_source_symbols);
         let js = nb_source_symbols - jl;
 
