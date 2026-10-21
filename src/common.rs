@@ -24,19 +24,22 @@ pub fn intermediate_symbols(k: u32) -> (u32, u32, u32, u32, u32) {
     // X be the smallest positive integer such that X*(X-1) >= 2*K.
     // X^2 - X - 2k >= 0
     // det = b^ - 4ac
-    let x = ((1f64 + f64::sqrt(1f64 + (8f64 * k as f64))) / 2f64).ceil() as u64;
+    let mut x = 1u64;
+    while x * (x - 1) < 2 * k as u64 {
+        x += 1;
+    }
 
     // S be the smallest prime integer such that S >= ceil(0.01*K) + X
-    let s = (0.01f64 * k as f64).ceil() as u64 + x;
+    let s = div_ceil(k as u64, 100) + x;
     let s = prime_greater_or_equal(s);
 
     // H is the smallest integer such that choose(H, ceil(H/2)) >= K + S
     let mut h = 1;
-    while choose(h, ((h as f64) / 2.0).ceil() as u64) < k as u64 + s {
+    while choose(h, div_ceil(h, 2)) < k as u64 + s {
         h += 1
     }
 
-    let hp = (h as f32 / 2.0).ceil() as u32;
+    let hp = div_ceil(h, 2) as u32;
     let l = k as u64 + s + h;
     let l_prime = prime_greater_or_equal(l);
 
@@ -45,10 +48,32 @@ pub fn intermediate_symbols(k: u32) -> (u32, u32, u32, u32, u32) {
 
 fn prime_greater_or_equal(p: u64) -> u64 {
     let mut p = p;
-    while !primes::is_prime(p) {
+    while !is_prime(p) {
         p += 1;
     }
     p
+}
+
+fn is_prime(n: u64) -> bool {
+    if n < 2 {
+        return false;
+    }
+    if n % 2 == 0 {
+        return n == 2;
+    }
+    let mut d = 3u64;
+    while d * d <= n {
+        if n % d == 0 {
+            return false;
+        }
+        d += 2;
+    }
+    true
+}
+
+// u64::div_ceil requires Rust 1.73 (MSRV is 1.71)
+fn div_ceil(a: u64, b: u64) -> u64 {
+    (a + b - 1) / b
 }
 
 /// Calculates the number of ways n objects can be chosen from among r objects
