@@ -351,7 +351,7 @@ fn xor_u8(row_1: &mut [u8], row_2: &[u8]) {
 ))]
 pub mod cpu {
     #[cfg(target_arch = "x86")]
-    use core::arch::x86::{__cpuid, __cpuid_count, _xgetbv, has_cpuid};
+    use core::arch::x86::{__cpuid, __cpuid_count, _xgetbv};
     #[cfg(target_arch = "x86_64")]
     use core::arch::x86_64::{__cpuid, __cpuid_count, _xgetbv};
     use core::sync::atomic::{AtomicU8, Ordering};
@@ -367,13 +367,8 @@ pub mod cpu {
     /// ones
     #[allow(unused_unsafe)]
     fn detect() -> u8 {
-        #[cfg(target_arch = "x86")]
-        if !has_cpuid() {
-            return DETECTED;
-        }
-
         let mut features = DETECTED;
-        // Safety: CPUID is available (always on x86_64, checked on x86)
+
         let max_leaf = unsafe { __cpuid(0) }.eax;
         if max_leaf < 1 {
             return features;
